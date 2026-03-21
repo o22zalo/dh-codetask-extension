@@ -9,8 +9,9 @@ Extension hỗ trợ lập trình viên trong Visual Studio 2017, xây dựng tr
 - **Configuration (XML)** — Cấu hình key-value, persist vào `%AppData%\DhCodetaskExtension\`
 - **Configuration (JSON)** — Editor JSON với Format / Validate / Diff log khi save
 - **Tool Window** — Panel dockable mở từ `View > Other Windows > DH Codetask`
-- **Settings Dialog (XML)** — Form WPF mở từ `Tools > DH Codetask Extension Settings...`
-- **Settings Dialog (JSON)** — Editor JSON mở từ `Tools > DH Codetask Extension Settings (JSON)...`
+- **Top-level Menu** — Menu "DH Codetask Extension" trên menu bar VS với các menu con:
+  - `Settings...` — Mở form cấu hình XML (WPF dialog)
+  - `Settings (JSON)...` — Mở editor JSON cấu hình
 - **Options Page** — Tích hợp vào `Tools > Options > DH Codetask Extension > General`
 
 ## Cấu trúc thư mục
@@ -31,7 +32,7 @@ dh-codetask-extension/
     ├── DhCodetaskPackage.cs          ← Entry point (AsyncPackage)
     ├── DhCodetaskPackage.resx
     ├── PackageGuids.cs
-    ├── CommandTable.vsct
+    ├── CommandTable.vsct             ← Menu definitions (có top-level menu mới)
     ├── source.extension.vsixmanifest
     ├── packages.config
     ├── Commands/
@@ -69,11 +70,28 @@ dh-codetask-extension/
 2. Restore NuGet packages
 3. Build và chạy (F5) để mở VS Experimental Instance
 4. Vào `View > Other Windows > DH Codetask` để mở Tool Window
+5. Truy cập menu **DH Codetask Extension** trên menu bar để mở Settings
+
+## Menu Structure
+
+```
+[Menu bar]
+  └── DH Codetask Extension
+        ├── Settings...           → Mở SettingsDialog (XML config)
+        └── Settings (JSON)...    → Mở JsonSettingsDialog
+
+[View > Other Windows]
+  └── DH Codetask               → Mở Tool Window
+
+[Tools > Options]
+  └── DH Codetask Extension
+        └── General             → Options page
+```
 
 ## Tùy chỉnh
 
 1. **Thay GUID**: Tạo GUID mới trong `PackageGuids.cs` và `CommandTable.vsct`
-2. **Thêm tính năng**: Thêm button vào `MainToolWindowControl.xaml` và handler trong `.xaml.cs`
+2. **Thêm menu con**: Thêm `<Button>` mới vào `CommandTable.vsct` với parent là `TopLevelMenuGroup`
 3. **Thêm service**: Tạo class mới trong `Services/`, đăng ký trong `DhCodetaskPackage.cs`
 4. **Đổi cấu hình**: Cập nhật `DefaultJson` trong `JsonConfigService.cs` hoặc `Defaults` trong `ConfigurationService.cs`
 

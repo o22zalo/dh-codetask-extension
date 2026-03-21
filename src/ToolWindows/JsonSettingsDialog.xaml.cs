@@ -8,7 +8,7 @@ namespace DhCodetaskExtension.ToolWindows
 {
     /// <summary>
     /// JSON Settings dialog — full-width editor với Format, Validate, Save.
-    /// Mở từ: Tools > DH Codetask Extension Settings (JSON)...
+    /// Mở từ: DH Codetask Extension > Settings (JSON)...
     /// </summary>
     public partial class JsonSettingsDialog : Window
     {

@@ -2,9 +2,9 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <!-- TODO: Change the Id to a unique GUID for your extension -->
-        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="1.0" Language="en-US" Publisher="DH" />
+        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="2.0" Language="en-US" Publisher="DH" />
         <DisplayName>DH Codetask Extension</DisplayName>
-        <Description xml:space="preserve">Extension hỗ trợ lập trình viên trong Visual Studio 2017. Sử dụng AsyncPackage pattern với Settings dialogs, Output Window, Status Bar và Configuration services.</Description>
+        <Description xml:space="preserve">Extension hỗ trợ lập trình viên trong Visual Studio 2017. Sử dụng AsyncPackage pattern với top-level menu "DH Codetask Extension", Settings dialogs, Output Window, Status Bar và Configuration services.</Description>
         <MoreInfo>https://github.com/your-repo/dh-codetask-extension</MoreInfo>
         <License>Resources\LICENSE</License>
         <Icon>Resources\Icon128x128.png</Icon>

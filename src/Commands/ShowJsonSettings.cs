@@ -7,9 +7,9 @@ using Task = System.Threading.Tasks.Task;
 namespace DhCodetaskExtension
 {
     /// <summary>
-    /// Command mở JSON Settings dialog từ Tools menu.
+    /// Command mở JSON Settings dialog từ menu DH Codetask Extension.
     /// Đăng ký trong CommandTable.vsct với ID CmdIdJsonSettings (0x0500).
-    /// Hiển thị tại: Tools > DH Codetask Extension Settings (JSON)...
+    /// Hiển thị tại: DH Codetask Extension > Settings (JSON)...
     /// </summary>
     internal sealed class ShowJsonSettings
     {

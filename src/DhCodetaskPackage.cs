@@ -20,8 +20,8 @@ namespace DhCodetaskExtension
     ///   - ConfigurationService : XML-based key-value config (persists to %AppData%)
     ///   - JsonConfigService    : JSON-based config with diff logging
     ///   - MainToolWindow       : a dockable tool window
-    ///   - SettingsDialog       : a WPF modal settings dialog (Tools menu)
-    ///   - JsonSettingsDialog   : a JSON editor settings dialog (Tools menu)
+    ///   - SettingsDialog       : a WPF modal settings dialog (menu DH Codetask Extension > Settings)
+    ///   - JsonSettingsDialog   : a JSON editor settings dialog (menu DH Codetask Extension > Settings JSON)
     ///
     /// HOW TO CUSTOMIZE:
     ///   1. Replace all GUIDs in PackageGuids.cs and CommandTable.vsct
@@ -33,7 +33,7 @@ namespace DhCodetaskExtension
     [InstalledProductRegistration(
         "DH Codetask Extension",
         "Extension hỗ trợ lập trình viên trong Visual Studio 2017.",
-        "1.0")]
+        "2.0")]
     [ProvideToolWindow(typeof(MainToolWindow),
         Style = VsDockStyle.Tabbed, DockedWidth = 300,
         Window = "DocumentWell", Orientation = ToolWindowOrientation.Left)]

@@ -9,11 +9,32 @@
   <Commands package="guidDhCodetaskPackage">
 
     <!-- ================================================================ -->
+    <!--  Menus                                                            -->
+    <!-- ================================================================ -->
+    <Menus>
+
+      <!-- Top-level menu: DH Codetask Extension (xuất hiện trên menu bar VS) -->
+      <Menu guid="guidDhCodetaskCmdSet" id="TopLevelMenu" priority="0x0700" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
+        <Strings>
+          <ButtonText>DH Codetask Extension</ButtonText>
+          <CommandName>DhCodetaskExtension</CommandName>
+        </Strings>
+      </Menu>
+
+    </Menus>
+
+    <!-- ================================================================ -->
     <!--  Groups                                                           -->
     <!-- ================================================================ -->
     <Groups>
 
-      <!-- Settings group in Tools menu -->
+      <!-- Group chứa các menu item trong top-level menu -->
+      <Group guid="guidDhCodetaskCmdSet" id="TopLevelMenuGroup" priority="0x0100">
+        <Parent guid="guidDhCodetaskCmdSet" id="TopLevelMenu"/>
+      </Group>
+
+      <!-- Settings group trong Tools menu (giữ lại để tương thích) -->
       <Group guid="guidDhCodetaskCmdSet" id="SettingsCmdGroup" priority="0x0800">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
       </Group>
@@ -36,22 +57,24 @@
         </Strings>
       </Button>
 
-      <!-- Tools > DH Codetask Extension Settings... -->
+      <!-- DH Codetask Extension > Settings... (menu cha mới) -->
       <Button guid="guidDhCodetaskCmdSet" id="CmdIdSettings" priority="0x0100" type="Button">
-        <Parent guid="guidDhCodetaskCmdSet" id="SettingsCmdGroup"/>
+        <Parent guid="guidDhCodetaskCmdSet" id="TopLevelMenuGroup"/>
         <Icon guid="ImageCatalogGuid" id="Settings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>DH Codetask Extension Settings...</ButtonText>
+          <ButtonText>Settings...</ButtonText>
           <CommandName>DhCodetaskExtension.Settings</CommandName>
         </Strings>
       </Button>
 
-      <!-- Tools > DH Codetask Extension Settings (JSON)... -->
+      <!-- DH Codetask Extension > Settings (JSON)... (menu cha mới) -->
       <Button guid="guidDhCodetaskCmdSet" id="CmdIdJsonSettings" priority="0x0101" type="Button">
-        <Parent guid="guidDhCodetaskCmdSet" id="SettingsCmdGroup"/>
+        <Parent guid="guidDhCodetaskCmdSet" id="TopLevelMenuGroup"/>
+        <!--<Icon guid="ImageCatalogGuid" id="JSONFile"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>-->
         <Strings>
-          <ButtonText>DH Codetask Extension Settings (JSON)...</ButtonText>
+          <ButtonText>Settings (JSON)...</ButtonText>
           <CommandName>DhCodetaskExtension.JsonSettings</CommandName>
         </Strings>
       </Button>
@@ -68,10 +91,13 @@
     <GuidSymbol name="guidDhCodetaskPackage"    value="{D1E2F3A4-B5C6-7890-ABCD-EF0123456789}" />
 
     <GuidSymbol name="guidDhCodetaskCmdSet" value="{E2F3A4B5-C6D7-8901-BCDE-F01234567890}">
-      <IDSymbol name="ShowMainWindowId"  value="0x0100" />
-      <IDSymbol name="CmdIdSettings"     value="0x0400" />
-      <IDSymbol name="CmdIdJsonSettings" value="0x0500" />
-      <IDSymbol name="SettingsCmdGroup"  value="0x1300" />
+      <IDSymbol name="ShowMainWindowId"   value="0x0100" />
+      <IDSymbol name="CmdIdSettings"      value="0x0400" />
+      <IDSymbol name="CmdIdJsonSettings"  value="0x0500" />
+      <IDSymbol name="SettingsCmdGroup"   value="0x1300" />
+      <!-- Top-level menu và group mới -->
+      <IDSymbol name="TopLevelMenu"       value="0x1400" />
+      <IDSymbol name="TopLevelMenuGroup"  value="0x1500" />
     </GuidSymbol>
   </Symbols>
 

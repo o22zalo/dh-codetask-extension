@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Shell;
 namespace DhCodetaskExtension.ToolWindows
 {
     /// <summary>
-    /// WPF Settings dialog, modal, mở từ Tools menu.
+    /// WPF Settings dialog, modal, mở từ menu DH Codetask Extension > Settings...
     /// Load values từ ConfigurationService, validate, save khi click Save.
     ///
     /// HOW TO CUSTOMIZE:

@@ -7,9 +7,9 @@ using Task = System.Threading.Tasks.Task;
 namespace DhCodetaskExtension
 {
     /// <summary>
-    /// Command mở Settings dialog (XML) từ Tools menu.
+    /// Command mở Settings dialog (XML) từ menu DH Codetask Extension.
     /// Đăng ký trong CommandTable.vsct với ID CmdIdSettings (0x0400).
-    /// Hiển thị tại: Tools > DH Codetask Extension Settings...
+    /// Hiển thị tại: DH Codetask Extension > Settings...
     /// </summary>
     internal sealed class ShowSettings
     {

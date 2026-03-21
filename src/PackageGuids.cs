@@ -36,5 +36,9 @@ namespace DhCodetaskExtension
 
         // JSON settings dialog
         public const int CmdIdJsonSettings  = 0x0500;
+
+        // Top-level menu và group (dùng trong CommandTable.vsct)
+        public const int TopLevelMenu       = 0x1400;
+        public const int TopLevelMenuGroup  = 0x1500;
     }
 }

@@ -7,3 +7,7 @@
 - Đổi tên các file để dễ quản lý
 - Cập nhật tất cả references bên trong code
 - Tạo zip theo quy tắc versioning
+
+## 2026-03-21 11:00 — Thêm top-level menu "DH Codetask Extension"
+
+**Yêu cầu:** Bổ sung menu cha là "DH Codetask Extension" trên menu bar Visual Studio, với menu con "Settings" và "Settings (JSON)" để mở form cấu hình.
