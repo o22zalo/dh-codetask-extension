@@ -4,66 +4,95 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="800"
-             d:DesignWidth="300">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Width="240"
-                    Margin="0,12,0,12">
+             d:DesignHeight="900"
+             d:DesignWidth="420">
+    <Grid Margin="10">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="DhCodetaskExtension — Dev Task Tracker" FontSize="16" FontWeight="Bold"/>
+                <TextBlock Text="Theo dõi task, TODO, thời gian và sinh report hoàn thành ngay trong Visual Studio 2017."
+                           Margin="0,4,0,12"
+                           Foreground="Gray"
+                           TextWrapping="Wrap"/>
 
-            <!-- Title -->
-            <TextBlock Text="DH Codetask Extension"
-                       FontWeight="Bold" FontSize="13"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,4"/>
-            <TextBlock Text="Extension hỗ trợ lập trình viên"
-                       FontSize="10" Foreground="Gray"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,12"/>
+                <GroupBox Header="Task Info" Margin="0,0,0,10">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Issue URL" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtTaskUrl" Grid.Row="0" Grid.Column="1" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Task ID" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtTaskId" Grid.Row="1" Grid.Column="1" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Title" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtTaskTitle" Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Labels" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TxtLabels" Grid.Row="3" Grid.Column="1" Margin="0,0,0,6"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Description" VerticalAlignment="Top"/>
+                        <TextBox x:Name="TxtDescription" Grid.Row="4" Grid.Column="1" Height="70" AcceptsReturn="True" TextWrapping="Wrap"/>
+                    </Grid>
+                </GroupBox>
 
-            <!-- ── Output Window ─────────────────────────────────────── -->
-            <TextBlock Text="── Output Window ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Write to Output"   Click="Button_WriteOutput_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Clear Output Pane" Click="Button_ClearOutput_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
+                <GroupBox Header="Time Tracking" Margin="0,0,0,10">
+                    <StackPanel Margin="10">
+                        <TextBlock x:Name="TxtTaskTimer" Text="00:00:00" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
+                            <Button Content="Start" Click="Button_StartTask_Click" Width="74" Margin="4"/>
+                            <Button Content="Pause" Click="Button_PauseTask_Click" Width="74" Margin="4"/>
+                            <Button Content="Resume" Click="Button_ResumeTask_Click" Width="74" Margin="4"/>
+                            <Button Content="Stop" Click="Button_StopTask_Click" Width="74" Margin="4"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </GroupBox>
 
-            <!-- ── Status Bar ─────────────────────────────────────────── -->
-            <TextBlock Text="── Status Bar ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Set Status Text"   Click="Button_SetStatus_Click"     Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Animate (3 s)"     Click="Button_Animate_Click"       Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Show Progress Bar" Click="Button_Progress_Click"      Width="220" Height="30" Margin="0,0,0,6"/>
+                <GroupBox Header="Work Notes" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtWorkNotes" Margin="10" Height="90" AcceptsReturn="True" TextWrapping="Wrap"/>
+                </GroupBox>
 
-            <!-- ── Configuration (XML) ───────────────────────────────── -->
-            <TextBlock Text="── Configuration (XML) ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Dump Config to Output" Click="Button_ConfigDump_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Test Config Getters"   Click="Button_ConfigTest_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Reset Config Defaults" Click="Button_ConfigReset_Click"  Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Open Settings Dialog"  Click="Button_OpenSettings_Click" Width="220" Height="30" Margin="0,0,0,6"/>
+                <GroupBox Header="TODO List" Margin="0,0,0,10">
+                    <StackPanel Margin="10">
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBox x:Name="TxtNewTodo" MinWidth="220" Margin="0,0,8,0"/>
+                            <Button Content="Add TODO" Click="Button_AddTodo_Click" Width="90"/>
+                        </DockPanel>
+                        <ListBox x:Name="LstTodos" Height="180" DisplayMemberPath="Title" SelectionChanged="LstTodos_SelectionChanged"/>
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="Start TODO" Click="Button_StartTodo_Click" Width="92" Margin="4,0,4,0"/>
+                            <Button Content="Pause TODO" Click="Button_PauseTodo_Click" Width="92" Margin="4,0,4,0"/>
+                            <Button Content="Toggle Done" Click="Button_ToggleTodoDone_Click" Width="92" Margin="4,0,4,0"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </GroupBox>
 
-            <!-- ── Configuration (JSON) ──────────────────────────────── -->
-            <TextBlock Text="── Configuration (JSON) ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Open JSON Settings"    Click="Button_OpenJsonSettings_Click" Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Test JSON Getters"     Click="Button_JsonConfigTest_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Reset JSON to Default" Click="Button_JsonConfigReset_Click"  Width="220" Height="30" Margin="0,0,0,6"/>
+                <GroupBox Header="Business Logic" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtBusinessLogic" Margin="10" Height="90" AcceptsReturn="True" TextWrapping="Wrap"/>
+                </GroupBox>
 
-            <!-- ── TODO: Thêm các section của bạn bên dưới ───────────── -->
-            <TextBlock Text="── Your Features Here ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="#007ACC" FontSize="11"/>
-            <TextBlock Text="Thêm button và handler mới&#10;theo pattern có sẵn ở trên."
-                       HorizontalAlignment="Center"
-                       TextAlignment="Center"
-                       FontSize="10" Foreground="Gray"
-                       Margin="0,0,0,6"/>
+                <GroupBox Header="Commit Message" Margin="0,0,0,10">
+                    <StackPanel Margin="10">
+                        <TextBox x:Name="TxtCommitMessage" Height="56" AcceptsReturn="True" TextWrapping="Wrap"/>
+                        <Button Content="Regenerate Commit Message" Click="Button_GenerateCommitMessage_Click" Margin="0,8,0,0" Width="190"/>
+                    </StackPanel>
+                </GroupBox>
 
-        </StackPanel>
-    </ScrollViewer>
+                <GroupBox Header="Actions">
+                    <StackPanel Margin="10">
+                        <WrapPanel>
+                            <Button Content="Save Snapshot" Click="Button_SaveSnapshot_Click" Width="112" Margin="4"/>
+                            <Button Content="Complete &amp; Archive" Click="Button_CompleteTask_Click" Width="140" Margin="4"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="TxtStorageInfo" Margin="4,8,4,0" Foreground="Gray" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

@@ -26,7 +26,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DhCodetaskExtension</RootNamespace>
     <AssemblyName>DhCodetaskExtension</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
@@ -71,6 +71,8 @@
     <Compile Include="Services\OptionsService.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Services\TaskTrackerService.cs" />
+    <Compile Include="Models\TaskTrackerModels.cs" />
     <!-- Tool Windows -->
     <Compile Include="ToolWindows\MainToolWindow.cs" />
     <Compile Include="ToolWindows\MainToolWindowControl.xaml.cs">

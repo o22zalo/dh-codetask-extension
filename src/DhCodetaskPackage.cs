@@ -33,7 +33,7 @@ namespace DhCodetaskExtension
     [InstalledProductRegistration(
         "DH Codetask Extension",
         "Extension hỗ trợ lập trình viên trong Visual Studio 2017.",
-        "2.0")]
+        "3.0")]
     [ProvideToolWindow(typeof(MainToolWindow),
         Style = VsDockStyle.Tabbed, DockedWidth = 300,
         Window = "DocumentWell", Orientation = ToolWindowOrientation.Left)]
@@ -50,6 +50,7 @@ namespace DhCodetaskExtension
         public StatusBarService     StatusBar    { get; private set; }
         public ConfigurationService Config       { get; private set; }
         public JsonConfigService    JsonConfig   { get; private set; }
+        public TaskTrackerService   Tracker      { get; private set; }
 
         // ── Package initialization ────────────────────────────────────────
 
@@ -62,12 +63,14 @@ namespace DhCodetaskExtension
             StatusBar    = new StatusBarService(this);
             Config       = new ConfigurationService(this, OutputWindow);
             JsonConfig   = new JsonConfigService(this, OutputWindow);
+            Tracker      = new TaskTrackerService(this, OutputWindow);
 
             // 2. Initialize services that need async setup
             await OutputWindow.InitializeAsync();
             await StatusBar.InitializeAsync();
             await Config.InitializeAsync();
             await JsonConfig.InitializeAsync();
+            await Tracker.InitializeAsync();
 
             // 3. Switch to UI thread for command registration and UI work
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
@@ -112,6 +115,7 @@ namespace DhCodetaskExtension
                     StatusBar    = StatusBar,
                     Config       = Config,
                     JsonConfig   = JsonConfig,
+                    Tracker      = Tracker,
                 };
             }
 

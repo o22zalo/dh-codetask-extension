@@ -17,5 +17,6 @@ namespace DhCodetaskExtension.ToolWindows
         public StatusBarService     StatusBar    { get; set; }
         public ConfigurationService Config       { get; set; }
         public JsonConfigService    JsonConfig   { get; set; }
+        public TaskTrackerService   Tracker      { get; set; }
     }
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+<PackageManifest Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <!-- TODO: Change the Id to a unique GUID for your extension -->
-        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="2.0" Language="en-US" Publisher="DH" />
+        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="3.0" Language="en-US" Publisher="DH" />
         <DisplayName>DH Codetask Extension</DisplayName>
-        <Description xml:space="preserve">Extension hỗ trợ lập trình viên trong Visual Studio 2017. Sử dụng AsyncPackage pattern với top-level menu "DH Codetask Extension", Settings dialogs, Output Window, Status Bar và Configuration services.</Description>
+        <Description xml:space="preserve">Dev Task Tracker cho Visual Studio 2017: theo dõi task, TODO, timer, commit message và lưu completion report JSON/Markdown.</Description>
         <MoreInfo>https://github.com/your-repo/dh-codetask-extension</MoreInfo>
         <License>Resources\LICENSE</License>
         <Icon>Resources\Icon128x128.png</Icon>
@@ -15,7 +15,7 @@
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0.27413, 16.0)" />
     </Installation>
     <Dependencies>
-        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6.1,)" />
         <Dependency Id="Microsoft.VisualStudio.MPF.15.0" DisplayName="Visual Studio MPF 15.0" d:Source="Installed" Version="[15.0]" />
     </Dependencies>
     <Prerequisites>

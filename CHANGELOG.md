@@ -33,3 +33,16 @@
 - `CommandTable.vsct`: Thêm IDSymbol `TopLevelMenu` (0x1400) và `TopLevelMenuGroup` (0x1500)
 - Các menu con: "Settings..." và "Settings (JSON)..." hiển thị ngắn gọn vì đã nằm trong menu cha
 - Xóa group `SettingsCmdGroup` khỏi Tools menu (không cần nữa, nhưng giữ symbol để không breaking)
+
+
+## 2026-03-21 - Dev Task Tracker v3.0: Triển khai màn hình tracker task, TODO timer và lưu report hoàn thành
+
+**Nguyên nhân:** `docs/Instructions.md` yêu cầu chuyển extension từ skeleton cấu hình sang công cụ theo dõi task phát triển thực tế ngay trong VS2017.
+
+**Thay đổi:**
+- Thêm `TaskTrackerService` để quản lý snapshot task hiện tại, session timer, TODO timer và archive report JSON/Markdown.
+- Thêm `TaskTrackerModels` cho `TrackerTaskState`, `TrackerTodoItem`, `TrackerSession`, `CompletionReport`.
+- Thay toàn bộ `MainToolWindowControl` bằng giao diện tracker task theo flow Start/Pause/Resume/Stop, TODO list, Work Notes, Business Logic và Commit Message.
+- Kết nối `DhCodetaskPackage` và `MainToolWindowState` với service tracker mới.
+- Tăng version project/manifest/package lên 3.0.0.
+- Cập nhật `README.md`, `.opushforce.message`, `user_changelog.md` và tạo gói zip phát hành theo rule.
