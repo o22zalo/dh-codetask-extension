@@ -1,102 +1,109 @@
-# DH Codetask Extension
+# DH Codetask Extension — DevTask Tracker v3.0
 
-Extension hỗ trợ lập trình viên trong Visual Studio 2017, xây dựng trên nền `AsyncPackage` pattern.
+Extension theo dõi task, time tracking và TODO trực tiếp trong Visual Studio 2017, tích hợp Gitea.
 
-## Tính năng
+## Tính năng v3.0
 
-- **Output Window** — Pane log riêng với timestamp
-- **Status Bar** — Set text, animation, progress bar
-- **Configuration (XML)** — Cấu hình key-value, persist vào `%AppData%\DhCodetaskExtension\`
-- **Configuration (JSON)** — Editor JSON với Format / Validate / Diff log khi save
-- **Tool Window** — Panel dockable mở từ `View > Other Windows > DH Codetask`
-- **Top-level Menu** — Menu "DH Codetask Extension" trên menu bar VS với các menu con:
-  - `Settings...` — Mở form cấu hình XML (WPF dialog)
-  - `Settings (JSON)...` — Mở editor JSON cấu hình
-- **Options Page** — Tích hợp vào `Tools > Options > DH Codetask Extension > General`
+| Tính năng | Mô tả |
+|-----------|-------|
+| **Gitea Integration** | Fetch task từ URL issue Gitea, auto-populate title/labels/description |
+| **Task Timer** | Start / Pause / Resume / Stop với đồng hồ real-time |
+| **TODO Time Tracking** | Mỗi TODO item có timer độc lập Start/Pause/Complete |
+| **Completion Report** | Sinh JSON + Markdown tự động, lưu `history\YYYY\MM\` |
+| **History Browser** | Hôm nay / Tuần / Tháng / Tùy chỉnh, phân trang, export CSV |
+| **Git Integration** | Auto commit message generation, push & complete một thao tác |
+| **Webhook** | POST event ra ngoài (Slack, CI/CD…), retry 3 lần |
+| **Restore** | Khôi phục task dở khi VS khởi động lại |
+| **Provider Pattern** | Thêm provider mới không cần sửa code hiện có |
 
 ## Cấu trúc thư mục
 
 ```
 dh-codetask-extension/
 ├── DhCodetaskExtension.sln
-├── LICENSE
-├── README.md
-├── CHANGELOG.md
-├── user_changelog.md
-├── .gitignore
-├── .opushforce.message
+├── LICENSE / README.md / CHANGELOG.md / user_changelog.md
+├── .opushforce.message / .gitignore
 ├── docs/
+│   ├── Instructions.md      ← Spec đầy đủ v3.0
+│   ├── error-skill-devtasktracker.md
 │   └── rule.md
 └── src/
     ├── DhCodetaskExtension.csproj
-    ├── DhCodetaskPackage.cs          ← Entry point (AsyncPackage)
-    ├── DhCodetaskPackage.resx
+    ├── DevTaskTrackerPackage.cs    ← Package entry point v3.0
     ├── PackageGuids.cs
-    ├── CommandTable.vsct             ← Menu definitions (có top-level menu mới)
+    ├── CommandTable.vsct
     ├── source.extension.vsixmanifest
     ├── packages.config
-    ├── Commands/
-    │   ├── ShowMainWindow.cs
-    │   ├── ShowSettings.cs
-    │   └── ShowJsonSettings.cs
-    ├── Services/
-    │   ├── OutputWindowService.cs
-    │   ├── StatusBarService.cs
-    │   ├── ConfigurationService.cs
-    │   ├── JsonConfigService.cs
-    │   └── OptionsService.cs
-    ├── ToolWindows/
-    │   ├── MainToolWindow.cs
-    │   ├── MainToolWindowControl.xaml
-    │   ├── MainToolWindowControl.xaml.cs
-    │   ├── MainToolWindowState.cs
-    │   ├── SettingsDialog.xaml
-    │   ├── SettingsDialog.xaml.cs
-    │   ├── JsonSettingsDialog.xaml
-    │   └── JsonSettingsDialog.xaml.cs
-    └── Properties/
-        └── AssemblyInfo.cs
+    ├── Core/
+    │   ├── Interfaces/             ← ITaskProvider, IEventBus, IGitService, …
+    │   ├── Models/                 ← TaskItem, TodoItem, CompletionReport, …
+    │   ├── Events/                 ← TaskStartedEvent, TodoCompletedEvent, …
+    │   └── Services/               ← EventBus, TimeTrackingService, AtomicFile, …
+    ├── Providers/
+    │   ├── TaskProviders/          ← GiteaTaskProvider, ManualTaskProvider, Factory
+    │   ├── StorageProviders/       ← JsonStorageService
+    │   ├── GitProviders/           ← GitService
+    │   ├── ReportProviders/        ← Json/Markdown/CompositeReportGenerator
+    │   └── NotificationProviders/  ← WebhookNotificationProvider
+    ├── ViewModels/
+    │   ├── TrackerViewModel.cs
+    │   ├── TodoItemViewModel.cs
+    │   └── HistoryViewModel.cs
+    ├── Commands/                   ← ShowTrackerWindow, ShowHistoryWindow, …
+    ├── Services/                   ← OutputWindowService, StatusBarService, …
+    └── ToolWindows/
+        ├── TrackerControl.xaml/.cs
+        ├── HistoryControl.xaml/.cs
+        ├── ReportDetailDialog.xaml/.cs
+        ├── TaskSettingsDialog.xaml/.cs
+        └── DevTaskToolWindows.cs
 ```
 
-## Yêu cầu
+## Cài đặt & Build
 
-- Visual Studio 2017 (v15.x)
-- .NET Framework 4.6
-- Visual Studio SDK
-
-## Bắt đầu
-
-1. Mở `DhCodetaskExtension.sln` trong Visual Studio 2017
-2. Restore NuGet packages
-3. Build và chạy (F5) để mở VS Experimental Instance
-4. Vào `View > Other Windows > DH Codetask` để mở Tool Window
-5. Truy cập menu **DH Codetask Extension** trên menu bar để mở Settings
-
-## Menu Structure
-
-```
-[Menu bar]
-  └── DH Codetask Extension
-        ├── Settings...           → Mở SettingsDialog (XML config)
-        └── Settings (JSON)...    → Mở JsonSettingsDialog
-
-[View > Other Windows]
-  └── DH Codetask               → Mở Tool Window
-
-[Tools > Options]
-  └── DH Codetask Extension
-        └── General             → Options page
+```bash
+# 1. Mở VS2017, open DhCodetaskExtension.sln
+# 2. Restore NuGet packages
+# 3. F5 để debug trong Experimental Instance
+# 4. View > DevTask Tracker để mở panel
 ```
 
-## Tùy chỉnh
+## Cấu hình Gitea
 
-1. **Thay GUID**: Tạo GUID mới trong `PackageGuids.cs` và `CommandTable.vsct`
-2. **Thêm menu con**: Thêm `<Button>` mới vào `CommandTable.vsct` với parent là `TopLevelMenuGroup`
-3. **Thêm service**: Tạo class mới trong `Services/`, đăng ký trong `DhCodetaskPackage.cs`
-4. **Đổi cấu hình**: Cập nhật `DefaultJson` trong `JsonConfigService.cs` hoặc `Defaults` trong `ConfigurationService.cs`
+1. Mở **DH Codetask Extension > DevTask Settings...**
+2. Điền `Gitea Base URL`, `Personal Token`
+3. Dán URL issue vào URL bar → **Fetch**
+
+## Luồng cơ bản
+
+```
+URL issue → [Fetch] → [▶ Start] → work... → [⏸ Pause]... → [▶ Resume]
+→ Thêm TODO items, start/pause từng item
+→ Ghi Work Notes & Business Logic
+→ [🚀 Push & Complete] → git commit+push → report JSON+MD → clear
+```
+
+## Mở rộng
+
+```csharp
+// Thêm provider task mới (Jira, Linear…)
+public class JiraTaskProvider : ITaskProvider {
+    public bool CanHandle(string url) => url.Contains("atlassian.net");
+    public async Task<TaskFetchResult> FetchAsync(string url, CancellationToken ct) { … }
+}
+// Đăng ký trong Package.InitializeAsync():
+_taskFactory.Register(new JiraTaskProvider(() => Settings));
+// Xong. Không sửa gì khác.
+```
 
 ## Versioning
 
 Format: `dh-codetask-extension.<version>.<nội-dung-thay-đổi>.zip`
 
-Xem `CHANGELOG.md` để biết lịch sử thay đổi.
+## Changelog
+
+Xem `CHANGELOG.md` để biết lịch sử thay đổi chi tiết.
+
+---
+
+_DhCodetaskExtension v3.0 — Gitea-first · Provider Pattern · TODO Time Tracking · EventBus · Completion Report · History Browser_

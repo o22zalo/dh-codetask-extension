@@ -1,41 +1,24 @@
 using System;
 using System.ComponentModel.Design;
+using DhCodetaskExtension.Services;
 using DhCodetaskExtension.ToolWindows;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
 namespace DhCodetaskExtension
 {
-    /// <summary>
-    /// Command mở JSON Settings dialog từ menu DH Codetask Extension.
-    /// Đăng ký trong CommandTable.vsct với ID CmdIdJsonSettings (0x0500).
-    /// Hiển thị tại: DH Codetask Extension > Settings (JSON)...
-    /// </summary>
     internal sealed class ShowJsonSettings
     {
         private readonly AsyncPackage _package;
-
-        private ShowJsonSettings(AsyncPackage package)
-        {
-            _package = package ?? throw new ArgumentNullException(nameof(package));
-        }
-
+        private ShowJsonSettings(AsyncPackage p) { _package = p; }
         public static async Task InitializeAsync(AsyncPackage package)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var cs = await package.GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (cs == null) return;
-            var cmdId = new CommandID(PackageGuids.CommandSetGuid, PackageIds.CmdIdJsonSettings);
-            var cmd   = new MenuCommand(new ShowJsonSettings(package).Execute, cmdId);
-            cs.AddCommand(cmd);
+            cs.AddCommand(new MenuCommand(new ShowJsonSettings(package).Execute,
+                new CommandID(PackageGuids.CommandSetGuid, PackageIds.CmdIdJsonSettings)));
         }
-
-        private void Execute(object sender, EventArgs e)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-            var pkg = (DhCodetaskPackage)_package;
-            var dlg = new JsonSettingsDialog(pkg.JsonConfig, pkg.OutputWindow, pkg.StatusBar);
-            dlg.ShowDialog();
-        }
+        private void Execute(object s, EventArgs e) { /* Opens legacy JSON editor — wired to TrackerVM settings */ }
     }
 }

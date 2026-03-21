@@ -1,0 +1,109 @@
+<Window x:Class="DhCodetaskExtension.ToolWindows.TaskSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="⚙ DevTask Tracker — Settings"
+        Width="500" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" ShowInTaskbar="False"
+        Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+    <Window.Resources>
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="MinWidth" Value="140"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style x:Key="Inp" TargetType="TextBox">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel Margin="16,14,16,14">
+        <TextBlock Text="⚙  DevTask Tracker — Settings" FontSize="13" FontWeight="Bold" Margin="0,0,0,12"/>
+
+        <!-- Gitea -->
+        <TextBlock Text="─── Gitea ───" FontSize="10" Foreground="Gray" Margin="0,0,0,6"/>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="Gitea Base URL :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtGiteaUrl" Style="{StaticResource Inp}"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="Personal Token :" Style="{StaticResource Lbl}"/>
+            <PasswordBox x:Name="PwdToken" Height="26" Padding="4,2" FontSize="11"
+                         VerticalContentAlignment="Center"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,8">
+            <TextBlock Text="Username :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtGiteaUser" Style="{StaticResource Inp}"/>
+        </DockPanel>
+
+        <!-- Git CLI -->
+        <TextBlock Text="─── Git CLI ───" FontSize="10" Foreground="Gray" Margin="0,0,0,6"/>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="" Style="{StaticResource Lbl}"/>
+            <CheckBox x:Name="ChkAutoPush" Content="Auto Push sau khi commit" FontSize="11"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="Git user.name :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtGitName" Style="{StaticResource Inp}"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,8">
+            <TextBlock Text="Git user.email :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtGitEmail" Style="{StaticResource Inp}"/>
+        </DockPanel>
+
+        <!-- Storage & Report -->
+        <TextBlock Text="─── Storage &amp; Report ───" FontSize="10" Foreground="Gray" Margin="0,0,0,6"/>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="Storage Path :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtStoragePath" Style="{StaticResource Inp}"
+                     ToolTip="Để trống để dùng %APPDATA%\DhCodetaskExtension"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="Report Format :" Style="{StaticResource Lbl}"/>
+            <ComboBox x:Name="CmbReportFormat" Height="26" FontSize="11" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem Content="json+markdown"/>
+                <ComboBoxItem Content="json"/>
+                <ComboBoxItem Content="markdown"/>
+            </ComboBox>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,8">
+            <TextBlock Text="History Default View :" Style="{StaticResource Lbl}"/>
+            <ComboBox x:Name="CmbHistoryView" Height="26" FontSize="11" Width="100" HorizontalAlignment="Left">
+                <ComboBoxItem Content="day"/>
+                <ComboBoxItem Content="week"/>
+                <ComboBoxItem Content="month"/>
+            </ComboBox>
+        </DockPanel>
+
+        <!-- Webhook -->
+        <TextBlock Text="─── Webhook ───" FontSize="10" Foreground="Gray" Margin="0,0,0,6"/>
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="" Style="{StaticResource Lbl}"/>
+            <CheckBox x:Name="ChkWebhook" Content="Enable Webhook" FontSize="11"/>
+        </DockPanel>
+        <DockPanel Margin="0,0,0,10">
+            <TextBlock Text="Webhook URL :" Style="{StaticResource Lbl}"/>
+            <TextBox x:Name="TxtWebhookUrl" Style="{StaticResource Inp}"/>
+        </DockPanel>
+
+        <!-- Validation -->
+        <Border x:Name="ValidationBorder" Background="#FFF3E0" BorderBrush="#FF9800"
+                BorderThickness="1" CornerRadius="3" Padding="8,5" Margin="0,0,0,6"
+                Visibility="Collapsed">
+            <TextBlock x:Name="TxtValidation" Foreground="#E65100" FontSize="11" TextWrapping="Wrap"/>
+        </Border>
+
+        <Separator Margin="0,4,0,8"/>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="BtnSave" Content="Save" Width="80" Height="28" FontWeight="SemiBold"
+                        FontSize="11" Margin="0,0,8,0" IsDefault="True" Click="BtnSave_Click"/>
+                <Button Content="Cancel" Width="80" Height="28" FontSize="11"
+                        IsCancel="True" Click="BtnCancel_Click"/>
+            </StackPanel>
+        </DockPanel>
+    </StackPanel>
+</Window>

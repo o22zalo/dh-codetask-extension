@@ -6,36 +6,23 @@ using Task = System.Threading.Tasks.Task;
 
 namespace DhCodetaskExtension
 {
-    /// <summary>
-    /// Command mở Settings dialog (XML) từ menu DH Codetask Extension.
-    /// Đăng ký trong CommandTable.vsct với ID CmdIdSettings (0x0400).
-    /// Hiển thị tại: DH Codetask Extension > Settings...
-    /// </summary>
     internal sealed class ShowSettings
     {
         private readonly AsyncPackage _package;
-
-        private ShowSettings(AsyncPackage package)
-        {
-            _package = package ?? throw new ArgumentNullException(nameof(package));
-        }
-
+        private ShowSettings(AsyncPackage p) { _package = p; }
         public static async Task InitializeAsync(AsyncPackage package)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var cs = await package.GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (cs == null) return;
-            var cmdId = new CommandID(PackageGuids.CommandSetGuid, PackageIds.CmdIdSettings);
-            var cmd   = new MenuCommand(new ShowSettings(package).Execute, cmdId);
-            cs.AddCommand(cmd);
+            cs.AddCommand(new MenuCommand(new ShowSettings(package).Execute,
+                new CommandID(PackageGuids.CommandSetGuid, PackageIds.CmdIdSettings)));
         }
-
-        private void Execute(object sender, EventArgs e)
+        private void Execute(object s, EventArgs e)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            var pkg = (DhCodetaskPackage)_package;
-            var dlg = new SettingsDialog(pkg.Config, pkg.OutputWindow, pkg.StatusBar);
-            dlg.ShowDialog();
+            var pkg = (DevTaskTrackerPackage)_package;
+            pkg.OpenSettings();
         }
     }
 }

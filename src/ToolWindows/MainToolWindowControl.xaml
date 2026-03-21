@@ -3,67 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d"
-             d:DesignHeight="800"
-             d:DesignWidth="300">
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Width="240"
-                    Margin="0,12,0,12">
-
-            <!-- Title -->
-            <TextBlock Text="DH Codetask Extension"
-                       FontWeight="Bold" FontSize="13"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,4"/>
-            <TextBlock Text="Extension hỗ trợ lập trình viên"
-                       FontSize="10" Foreground="Gray"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,12"/>
-
-            <!-- ── Output Window ─────────────────────────────────────── -->
-            <TextBlock Text="── Output Window ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Width="240" Margin="0,12,0,12">
+            <TextBlock Text="DH Codetask Extension" FontWeight="Bold" FontSize="13" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+            <TextBlock Text="Use View &gt; DevTask Tracker for v3.0" FontSize="11" Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,12" TextWrapping="Wrap" TextAlignment="Center"/>
+            <Button Content="Open DevTask Tracker" Click="BtnOpenTracker_Click" Width="220" Height="30" Margin="0,0,0,6"/>
+            <Button Content="Open Task History" Click="BtnOpenHistory_Click" Width="220" Height="30" Margin="0,0,0,6"/>
+            <Separator Margin="0,8"/>
             <Button Content="Write to Output"   Click="Button_WriteOutput_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Clear Output Pane" Click="Button_ClearOutput_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-
-            <!-- ── Status Bar ─────────────────────────────────────────── -->
-            <TextBlock Text="── Status Bar ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Set Status Text"   Click="Button_SetStatus_Click"     Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Animate (3 s)"     Click="Button_Animate_Click"       Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Show Progress Bar" Click="Button_Progress_Click"      Width="220" Height="30" Margin="0,0,0,6"/>
-
-            <!-- ── Configuration (XML) ───────────────────────────────── -->
-            <TextBlock Text="── Configuration (XML) ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Dump Config to Output" Click="Button_ConfigDump_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Test Config Getters"   Click="Button_ConfigTest_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Reset Config Defaults" Click="Button_ConfigReset_Click"  Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Open Settings Dialog"  Click="Button_OpenSettings_Click" Width="220" Height="30" Margin="0,0,0,6"/>
-
-            <!-- ── Configuration (JSON) ──────────────────────────────── -->
-            <TextBlock Text="── Configuration (JSON) ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="Gray" FontSize="11"/>
-            <Button Content="Open JSON Settings"    Click="Button_OpenJsonSettings_Click" Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Test JSON Getters"     Click="Button_JsonConfigTest_Click"   Width="220" Height="30" Margin="0,0,0,6"/>
-            <Button Content="Reset JSON to Default" Click="Button_JsonConfigReset_Click"  Width="220" Height="30" Margin="0,0,0,6"/>
-
-            <!-- ── TODO: Thêm các section của bạn bên dưới ───────────── -->
-            <TextBlock Text="── Your Features Here ──"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,4" Foreground="#007ACC" FontSize="11"/>
-            <TextBlock Text="Thêm button và handler mới&#10;theo pattern có sẵn ở trên."
-                       HorizontalAlignment="Center"
-                       TextAlignment="Center"
-                       FontSize="10" Foreground="Gray"
-                       Margin="0,0,0,6"/>
-
+            <Button Content="Dump Config to Output" Click="Button_ConfigDump_Click" Width="220" Height="30" Margin="0,0,0,6"/>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

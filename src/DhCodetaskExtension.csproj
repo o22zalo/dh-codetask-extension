@@ -4,16 +4,12 @@
   <PropertyGroup>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <NuGetPackageImportStamp></NuGetPackageImportStamp>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -54,16 +50,21 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
   <ItemGroup>
-    <!-- Core -->
-    <Compile Include="DhCodetaskPackage.cs" />
+    <!-- Package entry point -->
+    <Compile Include="DevTaskTrackerPackage.cs" />
     <Compile Include="PackageGuids.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+
     <!-- Commands -->
+    <Compile Include="Commands\ShowTrackerWindow.cs" />
+    <Compile Include="Commands\ShowHistoryAndSettings.cs" />
     <Compile Include="Commands\ShowMainWindow.cs" />
     <Compile Include="Commands\ShowSettings.cs" />
     <Compile Include="Commands\ShowJsonSettings.cs" />
-    <!-- Services -->
+
+    <!-- Services (legacy + new) -->
     <Compile Include="Services\OutputWindowService.cs" />
     <Compile Include="Services\StatusBarService.cs" />
     <Compile Include="Services\ConfigurationService.cs" />
@@ -71,12 +72,64 @@
     <Compile Include="Services\OptionsService.cs">
       <SubType>Component</SubType>
     </Compile>
+
+    <!-- Core — Interfaces -->
+    <Compile Include="Core\Interfaces\ITaskProvider.cs" />
+    <Compile Include="Core\Interfaces\IEventBus.cs" />
+    <Compile Include="Core\Interfaces\OtherInterfaces.cs" />
+
+    <!-- Core — Models -->
+    <Compile Include="Core\Models\AppSettings.cs" />
+    <Compile Include="Core\Models\TaskItem.cs" />
+    <Compile Include="Core\Models\TimeSession.cs" />
+    <Compile Include="Core\Models\TodoItem.cs" />
+    <Compile Include="Core\Models\WorkLog.cs" />
+    <Compile Include="Core\Models\CompletionReport.cs" />
+
+    <!-- Core — Events -->
+    <Compile Include="Core\Events\AppEvents.cs" />
+
+    <!-- Core — Services -->
+    <Compile Include="Core\Services\EventBus.cs" />
+    <Compile Include="Core\Services\TimeTrackingService.cs" />
+    <Compile Include="Core\Services\HistoryQueryService.cs" />
+    <Compile Include="Core\Services\CommitMessageGenerator.cs" />
+    <Compile Include="Core\Services\AtomicFile.cs" />
+
+    <!-- Providers -->
+    <Compile Include="Providers\TaskProviders\GiteaTaskProvider.cs" />
+    <Compile Include="Providers\TaskProviders\ManualTaskProvider.cs" />
+    <Compile Include="Providers\StorageProviders\JsonStorageService.cs" />
+    <Compile Include="Providers\GitProviders\GitService.cs" />
+    <Compile Include="Providers\ReportProviders\JsonReportGenerator.cs" />
+    <Compile Include="Providers\ReportProviders\MarkdownReportGenerator.cs" />
+    <Compile Include="Providers\ReportProviders\CompositeReportGenerator.cs" />
+    <Compile Include="Providers\NotificationProviders\WebhookNotificationProvider.cs" />
+
+    <!-- ViewModels -->
+    <Compile Include="ViewModels\TodoItemViewModel.cs" />
+    <Compile Include="ViewModels\TrackerViewModel.cs" />
+    <Compile Include="ViewModels\HistoryViewModel.cs" />
+
     <!-- Tool Windows -->
+    <Compile Include="ToolWindows\DevTaskToolWindows.cs" />
     <Compile Include="ToolWindows\MainToolWindow.cs" />
     <Compile Include="ToolWindows\MainToolWindowControl.xaml.cs">
       <DependentUpon>MainToolWindowControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolWindows\MainToolWindowState.cs" />
+    <Compile Include="ToolWindows\TrackerControl.xaml.cs">
+      <DependentUpon>TrackerControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ToolWindows\HistoryControl.xaml.cs">
+      <DependentUpon>HistoryControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ToolWindows\ReportDetailDialog.xaml.cs">
+      <DependentUpon>ReportDetailDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ToolWindows\TaskSettingsDialog.xaml.cs">
+      <DependentUpon>TaskSettingsDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ToolWindows\SettingsDialog.xaml.cs">
       <DependentUpon>SettingsDialog.xaml</DependentUpon>
     </Compile>
@@ -84,9 +137,45 @@
       <DependentUpon>JsonSettingsDialog.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- XAML Pages -->
+    <Page Include="ToolWindows\MainToolWindowControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\TrackerControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\HistoryControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\ReportDetailDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\TaskSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\SettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ToolWindows\JsonSettingsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\LICENSE">
       <Link>Resources\LICENSE</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\Icon128x128.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <VSCTCompile Include="CommandTable.vsct">
@@ -97,10 +186,12 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.VisualStudio.SDK.Analyzers.15.7.7\analyzers\cs\Microsoft.VisualStudio.SDK.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.7.18\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
+
   <ItemGroup>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -205,37 +296,20 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="DhCodetaskPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Icon128x128.png">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="ToolWindows\MainToolWindowControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ToolWindows\SettingsDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ToolWindows\JsonSettingsDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
+
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.7.18\build\Microsoft.VisualStudio.Threading.Analyzers.targets" Condition="Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.7.18\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.7.18\build\Microsoft.VisualStudio.Threading.Analyzers.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.7.18\build\Microsoft.VisualStudio.Threading.Analyzers.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.17\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VisualStudio.SDK.EmbedInteropTypes.15.0.17\build\Microsoft.VisualStudio.SDK.EmbedInteropTypes.targets'))" />
