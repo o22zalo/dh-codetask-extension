@@ -1,0 +1,12 @@
+{
+  "name": "dh-codetask-extension",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "git-opushforce": "git opushforce"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

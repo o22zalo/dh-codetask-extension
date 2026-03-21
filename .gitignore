@@ -1,0 +1,45 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+artifacts/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+packages/
+!packages/build/
+*.nupkg
+*.snupkg
+
+# VSIX artifacts
+*.vsix
+*.vsixmanifest.backup
+*.cache
+*.pkgdef
+
+# Generated files
+Generated\ Files/
+*.g.cs
+*.g.i.cs
+*.generated.cs
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.*
+appsettings.Development.json
+secrets.json
+
+# Keep important config tracked
+!.editorconfig
+!Directory.Build.props
+!Directory.Build.targets

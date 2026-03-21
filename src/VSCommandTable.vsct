@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <Extern href="stdidcmd.h"/>
+  <Extern href="vsshlids.h"/>
+  <Include href="KnownImageIds.vsct"/>
+
+  <Commands package="guidMyPackage">
+
+    <!-- ================================================================ -->
+    <!--  Groups                                                           -->
+    <!-- ================================================================ -->
+    <Groups>
+
+      <!-- Settings group in Tools menu -->
+      <Group guid="guidMyPackageCmdSet" id="SettingsCmdGroup" priority="0x0800">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
+      </Group>
+
+    </Groups>
+
+    <!-- ================================================================ -->
+    <!--  Buttons                                                          -->
+    <!-- ================================================================ -->
+    <Buttons>
+
+      <!-- View > Other Windows > Extension Template -->
+      <Button guid="guidMyPackageCmdSet" id="ShowMainWindowId" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="ImageCatalogGuid" id="Extension"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Extension Template</ButtonText>
+          <CommandName>VS2017ExtensionTemplate.ShowMainWindow</CommandName>
+        </Strings>
+      </Button>
+
+      <!-- Tools > VS2017 Extension Template Settings... -->
+      <Button guid="guidMyPackageCmdSet" id="CmdIdSettings" priority="0x0100" type="Button">
+        <Parent guid="guidMyPackageCmdSet" id="SettingsCmdGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Settings"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>VS2017 Extension Template Settings...</ButtonText>
+          <CommandName>VS2017ExtensionTemplate.Settings</CommandName>
+        </Strings>
+      </Button>
+
+      <!-- Tools > VS2017 Extension Template Settings (JSON)... -->
+      <Button guid="guidMyPackageCmdSet" id="CmdIdJsonSettings" priority="0x0101" type="Button">
+        <Parent guid="guidMyPackageCmdSet" id="SettingsCmdGroup"/>
+        <Strings>
+          <ButtonText>VS2017 Extension Template Settings (JSON)...</ButtonText>
+          <CommandName>VS2017ExtensionTemplate.JsonSettings</CommandName>
+        </Strings>
+      </Button>
+
+    </Buttons>
+
+  </Commands>
+
+  <!-- ================================================================== -->
+  <!--  Symbols                                                             -->
+  <!-- ================================================================== -->
+  <Symbols>
+    <!-- TODO: Replace both GUIDs below with your own generated GUIDs -->
+    <GuidSymbol name="guidMyPackage"    value="{D1E2F3A4-B5C6-7890-ABCD-EF0123456789}" />
+
+    <GuidSymbol name="guidMyPackageCmdSet" value="{E2F3A4B5-C6D7-8901-BCDE-F01234567890}">
+      <IDSymbol name="ShowMainWindowId"  value="0x0100" />
+      <IDSymbol name="CmdIdSettings"     value="0x0400" />
+      <IDSymbol name="CmdIdJsonSettings" value="0x0500" />
+      <IDSymbol name="SettingsCmdGroup"  value="0x1300" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>
