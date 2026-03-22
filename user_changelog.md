@@ -1,3 +1,21 @@
+## 2026-03-22 14:00 — Task task-2026-03-22-01.md
+
+**Yêu cầu:** Tách nghiệp vụ list file .sln/.csproj ra khỏi Tracker panel, tạo panel chuyên biệt `Project Helper`.
+
+**Triển khai:**
+
+- Tool window mới `Project Helper` (View > Other Windows > Project Helper, hoặc menu DH Codetask Extension)
+- Filter loại file: Tất cả / .sln / .csproj (RadioButton toggle)
+- Sort: Tên A→Z / Tên Z→A / Mới nhất / Cũ nhất
+- Search real-time theo tên file hoặc đường dẫn, nút ✕ xóa filter
+- Mỗi item hiển thị: badge màu (tím = SLN, xanh = PROJ), tên file, thư mục, ngày sửa cuối
+- 3 nút hành động: 📂 Mở VS (Process.Start với UseShellExecute), 📋 Copy path, 📁 Folder (mở Explorer)
+- Click trực tiếp vào row → mở file
+- Nút 🔄 trong header = force rescan bỏ qua cache
+- Load lần đầu dùng cache nếu còn hạn (SolutionFileCacheMinutes)
+- Xóa toàn bộ SolutionFiles logic khỏi TrackerViewModel và TrackerControl
+- Tracker panel: thêm nút "📁 Projects" → mở Project Helper
+
 ## 2026-03-22 09:00 — Task task-2026-03-22-00.md
 
 **Yêu cầu:** Triển khai 6 yêu cầu từ `docs/tasks/task-2026-03-22-00.md`:

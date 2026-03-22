@@ -26,12 +26,15 @@ namespace DhCodetaskExtension
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration(
         "DH Codetask Extension",
-        "DevTask Tracker — Gitea, Time Tracking, TODO, Reports.", "3.3")]
+        "DevTask Tracker — Gitea, Time Tracking, TODO, Reports.", "3.4")]
     [ProvideToolWindow(typeof(TrackerToolWindow),
         Style = VsDockStyle.Tabbed, DockedWidth = 360,
         Window = "DocumentWell", Orientation = ToolWindowOrientation.Left)]
     [ProvideToolWindow(typeof(HistoryToolWindow),
         Style = VsDockStyle.Tabbed, DockedWidth = 500,
+        Window = "DocumentWell", Orientation = ToolWindowOrientation.Right)]
+    [ProvideToolWindow(typeof(ProjectHelperToolWindow),
+        Style = VsDockStyle.Tabbed, DockedWidth = 440,
         Window = "DocumentWell", Orientation = ToolWindowOrientation.Right)]
     [Guid(PackageGuids.PackageGuidString)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
@@ -39,12 +42,10 @@ namespace DhCodetaskExtension
         "DH Codetask Extension", "General", 0, 0, supportsAutomation: true)]
     public sealed class DevTaskTrackerPackage : AsyncPackage
     {
-        // ── Public services ───────────────────────────────────────────────
         public OutputWindowService OutputWindow { get; private set; }
         public StatusBarService    StatusBar    { get; private set; }
         public AppSettings         Settings     { get; set; }
 
-        // ── Singletons ────────────────────────────────────────────────────
         private EventBus                    _eventBus;
         private JsonStorageService          _storage;
         private HistoryQueryService         _historyRepo;
@@ -55,10 +56,10 @@ namespace DhCodetaskExtension
         private TimeTrackingService         _taskTimer;
         private SolutionFileService         _solutionFileService;
 
-        private TrackerViewModel _trackerVm;
-        private HistoryViewModel _historyVm;
+        private TrackerViewModel       _trackerVm;
+        private HistoryViewModel       _historyVm;
+        private ProjectHelperViewModel _projectHelperVm;
 
-        // ── Initialization ────────────────────────────────────────────────
         protected override async Task InitializeAsync(
             CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -73,7 +74,7 @@ namespace DhCodetaskExtension
             Settings  = await _storage.LoadSettingsAsync();
 
             AppLogger.Instance.Init(OutputWindow);
-            AppLogger.Instance.Info("DevTaskTracker v3.3 initializing...");
+            AppLogger.Instance.Info("DevTaskTracker v3.4 initializing...");
 
             // 3. Core services
             _eventBus    = new EventBus();
@@ -82,7 +83,7 @@ namespace DhCodetaskExtension
             _gitService  = new GitService(() => Settings);
             _taskTimer   = new TimeTrackingService();
 
-            // 4. Solution file service (v3.3)
+            // 4. SolutionFileService — shared between ProjectHelper and Tracker
             _solutionFileService = new SolutionFileService(() => Settings, GetStorageRoot);
 
             // 5. Task providers
@@ -99,30 +100,32 @@ namespace DhCodetaskExtension
             _webhook = new WebhookNotificationProvider(() => Settings);
             _eventBus.Subscribe<TaskCompletedEvent>(e => _webhook.OnEvent(e));
 
-            // 8. ViewModels
+            // 8. TrackerViewModel (no SolutionFileService — moved to ProjectHelper)
             _trackerVm = new TrackerViewModel(
                 _eventBus, _storage, _gitService, _reportGen, _taskTimer,
-                () => Settings, msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } });
+                () => Settings,
+                msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } });
 
             _trackerVm.FetchTaskFunc        = url => _taskFactory.FetchAsync(url);
             _trackerVm.OpenSettingsAction   = OpenSettings;
             _trackerVm.OpenHistoryAction    = () => JoinableTaskFactory.RunAsync(ShowHistoryWindowAsync);
             _trackerVm.OpenLogFileAction    = OpenLogFile;
             _trackerVm.OpenConfigFileAction = OpenConfigFile;
-            _trackerVm.SolutionFileService  = _solutionFileService;
+            _trackerVm.OpenProjectHelperAction = () => JoinableTaskFactory.RunAsync(ShowProjectHelperWindowAsync);
 
-            // Wire history loader for URL duplicate check
             _trackerVm.LoadAllHistoryFunc = async () =>
             {
                 try { return await _historyRepo.GetAllAsync(); }
                 catch { return System.Linq.Enumerable.Empty<CompletionReport>(); }
             };
 
-            _historyVm = new HistoryViewModel(_historyRepo, msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } });
+            // 9. HistoryViewModel
+            _historyVm = new HistoryViewModel(
+                _historyRepo,
+                msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } });
             _historyVm.OpenDetailAction = OpenReportDetail;
             _historyVm.OpenFileAction   = OpenFileInShell;
 
-            // Wire: resume task from history
             _historyVm.ResumeFromHistoryAction = report =>
             {
                 if (report == null) return;
@@ -137,16 +140,20 @@ namespace DhCodetaskExtension
                 });
             };
 
-            // Wire: open URL
             _historyVm.OpenUrlAction = url =>
             {
                 if (string.IsNullOrEmpty(url)) return;
-                OutputWindow.Log("[History] 🔗 Opening URL: " + url);
+                OutputWindow.Log("[History] 🔗 " + url);
                 try { Process.Start(url); }
                 catch (Exception ex) { OutputWindow.Log("[History] ❌ " + ex.Message); }
             };
 
-            // 9. UI thread — command registration
+            // 10. ProjectHelperViewModel
+            _projectHelperVm = new ProjectHelperViewModel(
+                _solutionFileService,
+                msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } });
+
+            // 11. UI thread — commands
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             await ShowTrackerWindow.InitializeAsync(this);
@@ -157,8 +164,9 @@ namespace DhCodetaskExtension
             await ShowJsonSettings.InitializeAsync(this);
             await OpenLogFileCommand.InitializeAsync(this);
             await OpenConfigFileCommand.InitializeAsync(this);
+            await ShowProjectHelperWindow.InitializeAsync(this);
 
-            // 10. Restore in-progress task
+            // 12. Restore in-progress task
             try
             {
                 var existing = await _storage.LoadCurrentTaskAsync();
@@ -171,15 +179,17 @@ namespace DhCodetaskExtension
             }
             catch (Exception ex) { OutputWindow.Log("[Restore] " + ex.Message); }
 
-            OutputWindow.Log("[DevTaskTracker] v3.3 loaded. Settings: " + _storage.GetSettingsFilePath());
+            OutputWindow.Log("[DevTaskTracker] v3.4 loaded. Settings: " + _storage.GetSettingsFilePath());
             StatusBar.SetText("DevTask Tracker ready.");
         }
 
         // ── Tool window factory ───────────────────────────────────────────
+
         public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
         {
-            if (toolWindowType.Equals(Guid.Parse(TrackerToolWindow.WindowGuidString)) ||
-                toolWindowType.Equals(Guid.Parse(HistoryToolWindow.WindowGuidString))  ||
+            if (toolWindowType.Equals(Guid.Parse(TrackerToolWindow.WindowGuidString))       ||
+                toolWindowType.Equals(Guid.Parse(HistoryToolWindow.WindowGuidString))        ||
+                toolWindowType.Equals(Guid.Parse(ProjectHelperToolWindow.WindowGuidString))  ||
                 toolWindowType.Equals(Guid.Parse(MainToolWindow.WindowGuidString)))
                 return this;
             return null;
@@ -187,9 +197,10 @@ namespace DhCodetaskExtension
 
         protected override string GetToolWindowTitle(Type toolWindowType, int id)
         {
-            if (toolWindowType == typeof(TrackerToolWindow)) return TrackerToolWindow.Title;
-            if (toolWindowType == typeof(HistoryToolWindow)) return HistoryToolWindow.Title;
-            if (toolWindowType == typeof(MainToolWindow))    return MainToolWindow.Title;
+            if (toolWindowType == typeof(TrackerToolWindow))       return TrackerToolWindow.Title;
+            if (toolWindowType == typeof(HistoryToolWindow))       return HistoryToolWindow.Title;
+            if (toolWindowType == typeof(ProjectHelperToolWindow)) return ProjectHelperToolWindow.Title;
+            if (toolWindowType == typeof(MainToolWindow))          return MainToolWindow.Title;
             return base.GetToolWindowTitle(toolWindowType, id);
         }
 
@@ -200,6 +211,8 @@ namespace DhCodetaskExtension
                 return Task.FromResult<object>(_trackerVm);
             if (toolWindowType == typeof(HistoryToolWindow))
                 return Task.FromResult<object>(_historyVm);
+            if (toolWindowType == typeof(ProjectHelperToolWindow))
+                return Task.FromResult<object>(_projectHelperVm);
             if (toolWindowType == typeof(MainToolWindow))
                 return Task.FromResult<object>(new MainToolWindowState
                 {
@@ -210,6 +223,7 @@ namespace DhCodetaskExtension
         }
 
         // ── Public show methods ───────────────────────────────────────────
+
         public async Task ShowTrackerWindowAsync()
         {
             await JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -222,7 +236,14 @@ namespace DhCodetaskExtension
             await ShowToolWindowAsync(typeof(HistoryToolWindow), 0, true, DisposalToken);
         }
 
+        public async Task ShowProjectHelperWindowAsync()
+        {
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
+            await ShowToolWindowAsync(typeof(ProjectHelperToolWindow), 0, true, DisposalToken);
+        }
+
         // ── Settings ─────────────────────────────────────────────────────
+
         public void OpenSettings()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
@@ -240,14 +261,16 @@ namespace DhCodetaskExtension
             dlg.ShowDialog();
         }
 
-        // ── Log & Config quick-open ───────────────────────────────────────
+        // ── Log & Config ──────────────────────────────────────────────────
+
         public void OpenLogFile()
         {
             ThreadHelper.ThrowIfNotOnUIThread();
             var dir     = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "DhCodetaskExtension", "logs");
-            var logFile = Path.Combine(dir, string.Format("devtask_{0:yyyyMMdd}.log", DateTime.Today));
+            var logFile = Path.Combine(dir,
+                string.Format("devtask_{0:yyyyMMdd}.log", DateTime.Today));
 
             if (!File.Exists(logFile) && Directory.Exists(dir))
             {
@@ -319,10 +342,10 @@ namespace DhCodetaskExtension
                 Sessions      = new System.Collections.Generic.List<TimeSession>(),
                 Todos         = new System.Collections.Generic.List<TodoItem>(
                                     r.Todos ?? new System.Collections.Generic.List<TodoItem>()),
-                WorkNotes     = r.WorkNotes          ?? string.Empty,
-                BusinessLogic = r.BusinessLogic      ?? string.Empty,
-                CommitMessage = r.CommitMessage      ?? string.Empty,
-                GitBranch     = r.GitBranch          ?? string.Empty,
+                WorkNotes     = r.WorkNotes     ?? string.Empty,
+                BusinessLogic = r.BusinessLogic ?? string.Empty,
+                CommitMessage = r.CommitMessage ?? string.Empty,
+                GitBranch     = r.GitBranch     ?? string.Empty,
                 TimerState    = "Paused"
             };
         }

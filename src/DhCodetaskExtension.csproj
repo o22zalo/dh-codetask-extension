@@ -141,6 +141,12 @@
     <Compile Include="ToolWindows\PauseReasonDialog.xaml.cs">
       <DependentUpon>PauseReasonDialog.xaml</DependentUpon>
     </Compile>
+    <!-- v3.4 — Project Helper -->
+    <Compile Include="Commands\ShowProjectHelperWindow.cs" />
+    <Compile Include="ViewModels\ProjectHelperViewModel.cs" />
+    <Compile Include="ToolWindows\ProjectHelperControl.xaml.cs">
+      <DependentUpon>ProjectHelperControl.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <!-- XAML Pages -->
@@ -178,6 +184,11 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ToolWindows\PauseReasonDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <!-- v3.4 — Project Helper -->
+    <Page Include="ToolWindows\ProjectHelperControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

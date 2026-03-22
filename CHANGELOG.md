@@ -1,3 +1,34 @@
+## 2026-03-22 - Project Helper: panel chuyên biệt quản lý .sln và .csproj
+
+**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-01.md` — tách nghiệp vụ list file ra khỏi Tracker panel, tạo tool window riêng `Project Helper` với filter, sort, open VS, copy path.
+
+**Thay đổi kiến trúc:**
+
+- `SolutionFileService` giữ nguyên — được chia sẻ giữa `DevTaskTrackerPackage` và `ProjectHelperViewModel`
+- `TrackerViewModel` bỏ toàn bộ: `SolutionFiles`, `SolutionIsLoading`, `SolutionFilterKeyword`, `SolutionFileService`, `RefreshSolutionFilesCommand` → giảm trách nhiệm, clean hơn
+- `TrackerControl.xaml` bỏ Expander "📁 Solution / Project Files", thêm nút "📁 Projects" → mở Project Helper
+
+**Files mới:**
+
+- `src/ViewModels/ProjectHelperViewModel.cs`: sort (Tên A→Z, Tên Z→A, Mới nhất, Cũ nhất), type filter (All / .sln / .csproj), keyword filter real-time, `OpenFileAction`, `CopyToClipboard`, `OpenFolderAction`
+- `src/ToolWindows/ProjectHelperToolWindow.cs`: VS ToolWindowPane, GUID `C3D4E5F6-3333-4444-5555-012345678901`
+- `src/ToolWindows/ProjectHelperControl.xaml`: UI đầy đủ — header, type filter bar, sort bar, search bar, danh sách file với badge màu, 3 nút hành động mỗi row (📂 Mở VS / 📋 Copy / 📁 Folder), empty state
+- `src/ToolWindows/ProjectHelperControl.xaml.cs`: `ExtBgConverter`, `ExtLabelConverter`, force rescan button, click/copy/folder handlers
+- `src/Commands/ShowProjectHelperWindow.cs`: đăng ký menu command `0x0900`
+- `docs/tasks-successed/task-2026-03-22-01.md`: ghi nhận hoàn thành
+
+**Files sửa đổi:**
+
+- `src/PackageGuids.cs`: thêm `ShowProjectHelperWindowId = 0x0900`
+- `src/CommandTable.vsct`: thêm Project Helper vào View > Other Windows và top-level menu
+- `src/ToolWindows/DevTaskToolWindows.cs`: thêm `ProjectHelperToolWindow`
+- `src/DevTaskTrackerPackage.cs`: v3.4 — đăng ký `[ProvideToolWindow(typeof(ProjectHelperToolWindow))]`, khởi tạo `_projectHelperVm`, thêm `ShowProjectHelperWindowAsync()`
+- `src/ViewModels/TrackerViewModel.cs`: bỏ SolutionFile logic, thêm `OpenProjectHelperAction`
+- `src/ToolWindows/TrackerControl.xaml`: bỏ Expander solution files, thêm nút "📁 Projects"
+- `src/ToolWindows/TrackerControl.xaml.cs`: bỏ solution file handlers, thêm `BtnProjectHelper_Click`
+
+**Version bump:** 3.3 → 3.4
+
 ## 2026-03-22 - Solution File Browser: quét .sln và .csproj trong DirectoryRootDhHosCodePath với cache TTL
 
 **Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — thêm panel danh sách file .sln/.csproj để mở nhanh, sắp xếp a-z, lọc theo tên, với cơ chế cache tái sử dụng.

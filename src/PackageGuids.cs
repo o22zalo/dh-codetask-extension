@@ -23,12 +23,15 @@ namespace DhCodetaskExtension
         // DevTaskTracker v3.0 commands
         public const int ShowTrackerWindowId  = 0x0200;
         public const int ShowHistoryWindowId  = 0x0300;
-        public const int ShowTaskSettingsId   = 0x0600; // now opens JSON settings
+        public const int ShowTaskSettingsId   = 0x0600; // opens JSON settings
         public const int TrackerMenuGroup     = 0x1600;
 
         // v3.1 — Logging & Config quick-access
         public const int CmdIdOpenLogFile    = 0x0700;
         public const int CmdIdOpenConfigFile = 0x0800;
         public const int UtilityMenuGroup    = 0x1700;
+
+        // v3.4 — Project Helper tool window
+        public const int ShowProjectHelperWindowId = 0x0900;
     }
 }

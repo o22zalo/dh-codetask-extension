@@ -42,10 +42,6 @@ namespace DhCodetaskExtension.ViewModels
         private string _newTodoText      = string.Empty;
         private TaskItem _currentTask;
 
-        // ── Solution file panel ───────────────────────────────────────────
-        private string _solutionFilterKeyword = string.Empty;
-        private bool   _solutionIsLoading;
-
         public string TaskUrl         { get => _taskUrl;         set { _taskUrl         = value; OnProp(nameof(TaskUrl)); } }
         public string StatusMessage   { get => _statusMessage;   set { _statusMessage   = value; OnProp(nameof(StatusMessage)); } }
         public bool   IsFetching      { get => _isFetching;      set { _isFetching      = value; OnProp(nameof(IsFetching)); } }
@@ -60,20 +56,8 @@ namespace DhCodetaskExtension.ViewModels
         public bool   GitAvailable    { get => _gitAvailable;    set { _gitAvailable    = value; OnProp(nameof(GitAvailable)); } }
         public string NewTodoText     { get => _newTodoText;     set { _newTodoText     = value; OnProp(nameof(NewTodoText)); } }
 
-        public string SolutionFilterKeyword
-        {
-            get => _solutionFilterKeyword;
-            set { _solutionFilterKeyword = value; OnProp(nameof(SolutionFilterKeyword)); FilterSolutionFiles(); }
-        }
-        public bool SolutionIsLoading
-        {
-            get => _solutionIsLoading;
-            set { _solutionIsLoading = value; OnProp(nameof(SolutionIsLoading)); }
-        }
-
-        public ObservableCollection<TodoItemViewModel>  Todos          { get; } = new ObservableCollection<TodoItemViewModel>();
-        public ObservableCollection<SolutionFileEntry>  SolutionFiles  { get; } = new ObservableCollection<SolutionFileEntry>();
-        public ObservableCollection<string>             TodoTemplates  { get; } = new ObservableCollection<string>();
+        public ObservableCollection<TodoItemViewModel> Todos         { get; } = new ObservableCollection<TodoItemViewModel>();
+        public ObservableCollection<string>            TodoTemplates { get; } = new ObservableCollection<string>();
 
         public int    TodoTotal   => Todos.Count;
         public int    TodoDone    => Todos.Count(t => t.IsDone);
@@ -88,32 +72,28 @@ namespace DhCodetaskExtension.ViewModels
         }
 
         // ── Commands ──────────────────────────────────────────────────────
-        public ICommand FetchCommand                 { get; }
-        public ICommand ClearCommand                 { get; }
-        public ICommand StartCommand                 { get; }
-        public ICommand PauseCommand                 { get; }
-        public ICommand ResumeCommand                { get; }
-        public ICommand StopCommand                  { get; }
-        public ICommand AddTodoCommand               { get; }
-        public ICommand RegenerateCommitCommand      { get; }
-        public ICommand PushAndCompleteCommand       { get; }
-        public ICommand SaveAndPauseCommand          { get; }
-        public ICommand RefreshSolutionFilesCommand  { get; }
-        public ICommand AddTodoFromTemplateCommand   { get; }
+        public ICommand FetchCommand            { get; }
+        public ICommand ClearCommand            { get; }
+        public ICommand StartCommand            { get; }
+        public ICommand PauseCommand            { get; }
+        public ICommand ResumeCommand           { get; }
+        public ICommand StopCommand             { get; }
+        public ICommand AddTodoCommand          { get; }
+        public ICommand RegenerateCommitCommand { get; }
+        public ICommand PushAndCompleteCommand  { get; }
+        public ICommand SaveAndPauseCommand     { get; }
+        public ICommand AddTodoFromTemplateCommand { get; }
 
         // ── Injected actions ──────────────────────────────────────────────
-        public Func<string, Task<TaskFetchResult>> FetchTaskFunc          { get; set; }
+        public Func<string, Task<TaskFetchResult>> FetchTaskFunc       { get; set; }
         public Func<Task<System.Collections.Generic.IEnumerable<CompletionReport>>> LoadAllHistoryFunc { get; set; }
-        public Action OpenSettingsAction                                    { get; set; }
-        public Action OpenHistoryAction                                     { get; set; }
-        public Action OpenLogFileAction                                     { get; set; }
-        public Action OpenConfigFileAction                                  { get; set; }
+        public Action OpenSettingsAction       { get; set; }
+        public Action OpenHistoryAction        { get; set; }
+        public Action OpenLogFileAction        { get; set; }
+        public Action OpenConfigFileAction     { get; set; }
+        public Action OpenProjectHelperAction  { get; set; }   // v3.4 — opens Project Helper panel
         /// <summary>Called to show the pause reason dialog; returns selected reason or null if cancelled.</summary>
-        public Func<string> ShowPauseReasonDialog                          { get; set; }
-        public SolutionFileService SolutionFileService                     { get; set; }
-
-        private System.Collections.Generic.List<SolutionFileEntry> _allSolutionFiles
-            = new System.Collections.Generic.List<SolutionFileEntry>();
+        public Func<string> ShowPauseReasonDialog { get; set; }
 
         public TrackerViewModel(
             IEventBus eventBus, IStorageService storage, IGitService git,
@@ -128,18 +108,20 @@ namespace DhCodetaskExtension.ViewModels
             _settings        = settings;
             _log             = log ?? (_ => { });
 
-            FetchCommand                = new RelayCommand(FetchFireAndForget,           () => !IsFetching);
-            ClearCommand                = new RelayCommand(ClearTask);
-            StartCommand                = new RelayCommand(StartTask,                    () => TimerState == "Idle" || TimerState == "Paused");
-            PauseCommand                = new RelayCommand(PauseTaskFireAndForget,       () => TimerState == "Running");
-            ResumeCommand               = new RelayCommand(ResumeTask,                   () => TimerState == "Paused");
-            StopCommand                 = new RelayCommand(StopTask,                     () => TimerState == "Running" || TimerState == "Paused");
-            AddTodoCommand              = new RelayCommand(AddTodo,                      () => !string.IsNullOrWhiteSpace(NewTodoText));
-            RegenerateCommitCommand     = new RelayCommand(RegenerateCommit);
-            PushAndCompleteCommand      = new RelayCommand(PushAndCompleteFireAndForget);
-            SaveAndPauseCommand         = new RelayCommand(SaveAndPauseFireAndForget);
-            RefreshSolutionFilesCommand = new RelayCommand(RefreshSolutionFilesFireAndForget);
-            AddTodoFromTemplateCommand  = new RelayCommand<string>(t => { if (!string.IsNullOrWhiteSpace(t)) { NewTodoText = t; AddTodo(); } });
+            FetchCommand            = new RelayCommand(FetchFireAndForget,      () => !IsFetching);
+            ClearCommand            = new RelayCommand(ClearTask);
+            StartCommand            = new RelayCommand(StartTask,              () => TimerState == "Idle" || TimerState == "Paused");
+            PauseCommand            = new RelayCommand(PauseTaskFireAndForget, () => TimerState == "Running");
+            ResumeCommand           = new RelayCommand(ResumeTask,             () => TimerState == "Paused");
+            StopCommand             = new RelayCommand(StopTask,               () => TimerState == "Running" || TimerState == "Paused");
+            AddTodoCommand          = new RelayCommand(AddTodo,                () => !string.IsNullOrWhiteSpace(NewTodoText));
+            RegenerateCommitCommand = new RelayCommand(RegenerateCommit);
+            PushAndCompleteCommand  = new RelayCommand(PushAndCompleteFireAndForget);
+            SaveAndPauseCommand     = new RelayCommand(SaveAndPauseFireAndForget);
+            AddTodoFromTemplateCommand = new RelayCommand<string>(t =>
+            {
+                if (!string.IsNullOrWhiteSpace(t)) { NewTodoText = t; AddTodo(); }
+            });
 
             GitAvailable = _git?.IsAvailable() ?? false;
             _log(string.Format("[Tracker] Git available: {0}", GitAvailable));
@@ -149,12 +131,11 @@ namespace DhCodetaskExtension.ViewModels
         }
 
         // ── Fire-and-forget wrappers ──────────────────────────────────────
-        private void FetchFireAndForget()                { var _ = FetchAsync(); }
-        private void PauseTaskFireAndForget()            { var _ = PauseTaskAsync(); }
-        private void PushAndCompleteFireAndForget()      { var _ = CompleteFlowAsync(push: true); }
-        private void SaveAndPauseFireAndForget()         { var _ = CompleteFlowAsync(push: false); }
-        private void AutoSaveFireAndForget()             { var _ = AutoSaveCurrentAsync(); }
-        private void RefreshSolutionFilesFireAndForget() { var _ = RefreshSolutionFilesAsync(); }
+        private void FetchFireAndForget()           { var _ = FetchAsync(); }
+        private void PauseTaskFireAndForget()       { var _ = PauseTaskAsync(); }
+        private void PushAndCompleteFireAndForget() { var _ = CompleteFlowAsync(push: true); }
+        private void SaveAndPauseFireAndForget()    { var _ = CompleteFlowAsync(push: false); }
+        private void AutoSaveFireAndForget()        { var _ = AutoSaveCurrentAsync(); }
 
         // ── Fetch ─────────────────────────────────────────────────────────
         private async Task FetchAsync()
@@ -165,7 +146,6 @@ namespace DhCodetaskExtension.ViewModels
             _log("[Tracker] Fetching: " + TaskUrl);
             try
             {
-                // ── URL duplicate check against history ───────────────────
                 var normalizedUrl = NormalizeIssueUrl(TaskUrl);
                 if (LoadAllHistoryFunc != null)
                 {
@@ -199,7 +179,6 @@ namespace DhCodetaskExtension.ViewModels
                     catch { /* non-critical */ }
                 }
 
-                // ── Normal fetch via provider ─────────────────────────────
                 var result = await FetchTaskFunc(TaskUrl);
                 if (result.Success)
                 {
@@ -227,10 +206,6 @@ namespace DhCodetaskExtension.ViewModels
             finally { IsFetching = false; }
         }
 
-        /// <summary>
-        /// Strip #anchor (comment links) from issue URLs so duplicates are detected correctly.
-        /// e.g. http://gitea/o/r/issues/5#comment-12 → http://gitea/o/r/issues/5
-        /// </summary>
         private static string NormalizeIssueUrl(string url)
         {
             if (string.IsNullOrEmpty(url)) return string.Empty;
@@ -254,8 +229,8 @@ namespace DhCodetaskExtension.ViewModels
         // ── Timer ─────────────────────────────────────────────────────────
         private void StartTask()
         {
-            if (TimerState == "Idle")   _timer.Start();
-            else if (TimerState == "Paused") _timer.Resume();
+            if (TimerState == "Idle")         _timer.Start();
+            else if (TimerState == "Paused")  _timer.Resume();
             TimerState = "Running";
             _log(string.Format("[Tracker] ▶ Task started/resumed: \"{0}\"", TaskTitle));
             _eventBus.Publish(new TaskStartedEvent { StartTime = DateTime.Now });
@@ -263,14 +238,12 @@ namespace DhCodetaskExtension.ViewModels
 
         private async Task PauseTaskAsync()
         {
-            // Get pause reason
             string reason = string.Empty;
             if (ShowPauseReasonDialog != null)
             {
                 reason = ShowPauseReasonDialog() ?? string.Empty;
-                if (reason == null) return; // user cancelled
+                if (reason == null) return;
             }
-
             foreach (var t in Todos) t.AutoPause();
             _timer.Pause(reason);
             TimerState = "Paused";
@@ -416,36 +389,7 @@ namespace DhCodetaskExtension.ViewModels
             if (push) ClearTask();
         }
 
-        // ── Solution Files ────────────────────────────────────────────────
-        public async Task RefreshSolutionFilesAsync()
-        {
-            if (SolutionFileService == null) return;
-            SolutionIsLoading = true;
-            _log("[Tracker] 🔍 Scanning solution files...");
-            try
-            {
-                if (SolutionFileService.IsCacheExpired())
-                    await SolutionFileService.RefreshAsync();
-                _allSolutionFiles = await SolutionFileService.GetFilesAsync();
-                _log(string.Format("[Tracker] ✅ Found {0} solution files.", _allSolutionFiles.Count));
-                FilterSolutionFiles();
-            }
-            catch (Exception ex) { _log("[Tracker] ❌ Solution scan error: " + ex.Message); }
-            finally { SolutionIsLoading = false; }
-        }
-
-        private void FilterSolutionFiles()
-        {
-            var kw = SolutionFilterKeyword?.ToLower() ?? string.Empty;
-            var filtered = string.IsNullOrEmpty(kw)
-                ? _allSolutionFiles
-                : _allSolutionFiles.Where(f =>
-                    f.FileName.ToLower().Contains(kw) ||
-                    f.RelativePath.ToLower().Contains(kw)).ToList();
-            SolutionFiles.Clear();
-            foreach (var f in filtered) SolutionFiles.Add(f);
-        }
-
+        // ── Templates ─────────────────────────────────────────────────────
         private void RefreshTodoTemplates()
         {
             TodoTemplates.Clear();
@@ -529,7 +473,8 @@ namespace DhCodetaskExtension.ViewModels
             _uiTimer.Tick += (s, e) =>
             {
                 var ts = _timer.GetElapsed();
-                TimerDisplay = string.Format("{0:D2}:{1:D2}:{2:D2}", (int)ts.TotalHours, ts.Minutes, ts.Seconds);
+                TimerDisplay = string.Format("{0:D2}:{1:D2}:{2:D2}",
+                    (int)ts.TotalHours, ts.Minutes, ts.Seconds);
             };
             _uiTimer.Start();
         }
@@ -542,11 +487,11 @@ namespace DhCodetaskExtension.ViewModels
 
         private void RaiseCommandsChanged()
         {
-            (StartCommand           as RelayCommand)?.RaiseCanExecuteChanged();
-            (PauseCommand           as RelayCommand)?.RaiseCanExecuteChanged();
-            (ResumeCommand          as RelayCommand)?.RaiseCanExecuteChanged();
-            (StopCommand            as RelayCommand)?.RaiseCanExecuteChanged();
-            (FetchCommand           as RelayCommand)?.RaiseCanExecuteChanged();
+            (StartCommand   as RelayCommand)?.RaiseCanExecuteChanged();
+            (PauseCommand   as RelayCommand)?.RaiseCanExecuteChanged();
+            (ResumeCommand  as RelayCommand)?.RaiseCanExecuteChanged();
+            (StopCommand    as RelayCommand)?.RaiseCanExecuteChanged();
+            (FetchCommand   as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
         public System.Collections.Generic.IEnumerable<string> GetPauseReasons()
