@@ -1,3 +1,23 @@
+## 2026-03-22 16:30 — Task task-2026-03-22-03.md
+
+**Yêu cầu:** 4 vấn đề từ `docs/tasks/task-2026-03-22-03.md`:
+
+1. **Fix duplicate TaskPauseReasons / TodoTemplates** — Nguyên nhân: Newtonsoft.Json mặc định APPEND vào List đã có giá trị sẵn khi deserialize, nên mỗi lần mở Settings rồi Save là danh sách bị nhân bản. Fix: thêm `[JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]` trên 2 property `TaskPauseReasons` và `TodoTemplates` trong `AppSettings.cs`.
+
+2. **Fix Win32Exception khi chạy ripgrep** — Nguyên nhân: VS2017 devenv.exe là tiến trình 32-bit; nếu rg.exe là bản 64-bit, Windows trả về error 193 (ERROR_BAD_EXE_FORMAT). Fix: thử chạy trực tiếp trước; nếu nhận Win32Exception với code 193/216/14001 thì fallback sang cmd.exe (vốn là 64-bit trên Windows x64) để spawn rg.exe.
+
+3. **Filter file .sln/.csproj chậm** — Bỏ auto-search khi gõ (`UpdateSourceTrigger=PropertyChanged` vẫn giữ cho binding nhưng setter của `FilterKeyword` không còn gọi `ApplyFilter()`). Thêm nút **Tìm** và Enter key binding để kích hoạt filter. Sort/type vẫn auto-apply vì không cần gõ text.
+
+4. **Đưa Content Search lên top-level tab** — Thay Expander ở đáy panel bằng 2 RadioButton mode toggle ở đầu: `📄 Danh sách File` | `🔍 Tìm nội dung`. Mỗi mode chiếm toàn bộ chiều cao panel. ViewModel thêm `IsFileMode`/`IsSearchMode` property. Code-behind xử lý `Mode_Files_Checked` / `Mode_Search_Checked`.
+
+**Files thay đổi:**
+- `src/Core/Models/AppSettings.cs`: thêm `[JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]`
+- `src/ViewModels/ProjectHelperViewModel.cs`: `IsFileMode`/`IsSearchMode`, `FilterCommand`, `FilterKeyword` không auto-apply, `RunRipgrep` với fallback cmd.exe
+- `src/ToolWindows/ProjectHelperControl.xaml`: mode toggle, file panel, search panel top-level
+- `src/ToolWindows/ProjectHelperControl.xaml.cs`: mode toggle handlers, `SearchResult_Click`
+
+**Version bump:** 3.5 → 3.6
+
 ## 2026-03-22 15:30 — Task task-2026-03-22-02.md
 
 **Yêu cầu:** Cache file .sln/.csproj hoạt động chưa; tối ưu load chậm; thêm tìm kiếm nội dung bằng ripgrep.
@@ -44,39 +64,7 @@
 
 ## 2026-03-22 09:00 — Task task-2026-03-22-00.md
 
-**Yêu cầu:** Triển khai 6 yêu cầu từ `docs/tasks/task-2026-03-22-00.md`:
-
-1. **Solution File Browser**
-   - Panel "📁 Solution / Project Files" trong Tracker panel (Expander, lazy load)
-   - Quét đệ quy từ `DirectoryRootDhHosCodePath` (cấu hình JSON)
-   - Sắp xếp a-z theo tên file, lọc real-time theo tên/path
-   - Cache kết quả vào `solution-file-cache.json`, hết hạn theo `SolutionFileCacheMinutes` (default 20)
-   - Click mở file, nút 📋 copy đường dẫn
-
-2. **Report Checksum (SHA-256)**
-   - Mỗi report JSON được tính SHA-256 khi lưu (trước khi có field Checksum), lưu vào field `Checksum`
-   - Khi load history, xác minh checksum và hiển thị ✅ OK / ⚠ Thay đổi trên từng row
-   - File .md in SHA-256 trong section "🔒 Toàn vẹn dữ liệu"
-
-3. **URL Duplicate Check**
-   - Khi fetch URL, kiểm tra lịch sử — nếu URL đã tồn tại thì lấy thông tin từ lịch sử thay vì fetch lại
-   - Chuẩn hóa URL: bỏ phần #anchor trước khi so sánh
-
-4. **Redesign Task Timer (Bắt đầu / Tạm ngưng)**
-   - Chỉ còn 2 nút: "▶ Bắt đầu" (start/resume) và "⏸ Tạm ngưng"
-   - Khi Tạm ngưng hiện dialog chọn lý do từ `TaskPauseReasons` trong settings
-   - Lý do ngưng được lưu vào `TimeSession.PauseReason`
-   - Tạm ngưng auto-pause toàn bộ TODO đang chạy
-
-5. **Redesign TODO (Bắt đầu / Tạm ngưng / Kết thúc)**
-   - 3 nút hành động rõ ràng: ▶ Bắt đầu, ⏸ Tạm ngưng, ✓ Kết thúc
-   - Kết thúc đánh dấu done và lưu session time
-   - Tổng thời gian cộng dồn theo sessions
-
-6. **TODO Templates**
-   - Field `TodoTemplates: []` trong settings.json
-   - Expander "📋 Chọn nhanh từ mẫu" xuất hiện khi có template
-   - Click template → tự động thêm TODO
+**Yêu cầu:** Triển khai 6 yêu cầu từ `docs/tasks/task-2026-03-22-00.md`.
 
 # User Changelog
 

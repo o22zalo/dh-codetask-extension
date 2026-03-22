@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace DhCodetaskExtension.Core.Models
 {
@@ -27,22 +28,17 @@ namespace DhCodetaskExtension.Core.Models
         public string WebhookUrl     { get; set; } = string.Empty;
 
         // ── Solution File Scanner (v3.3) ─────────────────────────────────
-        /// <summary>Root directory to scan for .sln and .csproj files.</summary>
         public string DirectoryRootDhHosCodePath { get; set; } = string.Empty;
-
-        /// <summary>Cache expiry for solution file list (minutes). Default 20.</summary>
         public int SolutionFileCacheMinutes { get; set; } = 20;
 
         // ── Ripgrep (v3.5) ───────────────────────────────────────────────
-        /// <summary>
-        /// Full path to ripgrep executable (rg.exe on Windows).
-        /// Example: "C:\\tools\\rg.exe"
-        /// Used for fast content search in Project Helper panel.
-        /// </summary>
         public string RipgrepPath { get; set; } = string.Empty;
 
         // ── Task Pause Reasons (v3.3) ────────────────────────────────────
-        /// <summary>Predefined pause reasons shown in the pause dialog.</summary>
+        // ObjectCreationHandling.Replace: prevents Newtonsoft.Json from appending
+        // to the default list on deserialization, which caused duplicates each
+        // time the settings dialog was opened and saved.
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public List<string> TaskPauseReasons { get; set; } = new List<string>
         {
             "Hết giờ làm việc",
@@ -51,7 +47,7 @@ namespace DhCodetaskExtension.Core.Models
         };
 
         // ── TODO Templates (v3.3) ────────────────────────────────────────
-        /// <summary>Predefined TODO items that can be quickly added to a task.</summary>
+        [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public List<string> TodoTemplates { get; set; } = new List<string>();
 
         // ── Extensions (freeform key/value) ──────────────────────────────

@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace DhCodetaskExtension.ToolWindows
 {
-    // ── Value converters ──────────────────────────────────────────────────
+    // ── Value converters (unchanged from v3.5) ───────────────────────────
 
     public sealed class ExtBgConverter : IValueConverter
     {
@@ -61,7 +61,19 @@ namespace DhCodetaskExtension.ToolWindows
             });
         }
 
-        // ── File list buttons ─────────────────────────────────────────────
+        // ── Panel mode toggle ─────────────────────────────────────────────
+
+        private void Mode_Files_Checked(object sender, RoutedEventArgs e)
+        {
+            if (_vm != null) _vm.IsFileMode = true;
+        }
+
+        private void Mode_Search_Checked(object sender, RoutedEventArgs e)
+        {
+            if (_vm != null) _vm.IsFileMode = false;
+        }
+
+        // ── Header ────────────────────────────────────────────────────────
 
         private void BtnForceRefresh_Click(object sender, RoutedEventArgs e)
         {
@@ -72,13 +84,14 @@ namespace DhCodetaskExtension.ToolWindows
             });
         }
 
+        // ── File list item handlers ───────────────────────────────────────
+
         private void FileItem_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             AppLogger.Instance.TryCatch("FileItem_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var entry = fe.DataContext as SolutionFileEntry;
+                var fe    = sender as FrameworkElement;
+                var entry = fe?.DataContext as SolutionFileEntry;
                 if (entry != null) OpenFileImpl(entry.FullPath);
             });
         }
@@ -87,9 +100,7 @@ namespace DhCodetaskExtension.ToolWindows
         {
             AppLogger.Instance.TryCatch("BtnOpenVs_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var entry = fe.Tag as SolutionFileEntry;
+                var entry = (sender as FrameworkElement)?.Tag as SolutionFileEntry;
                 if (entry != null) OpenFileImpl(entry.FullPath);
             });
         }
@@ -98,9 +109,7 @@ namespace DhCodetaskExtension.ToolWindows
         {
             AppLogger.Instance.TryCatch("BtnCopyPath_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var entry = fe.Tag as SolutionFileEntry;
+                var entry = (sender as FrameworkElement)?.Tag as SolutionFileEntry;
                 if (entry != null) CopyToClipboardImpl(entry.FullPath);
             });
         }
@@ -109,9 +118,7 @@ namespace DhCodetaskExtension.ToolWindows
         {
             AppLogger.Instance.TryCatch("BtnOpenFolder_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var entry = fe.Tag as SolutionFileEntry;
+                var entry = (sender as FrameworkElement)?.Tag as SolutionFileEntry;
                 if (entry != null)
                 {
                     var dir = System.IO.Path.GetDirectoryName(entry.FullPath) ?? string.Empty;
@@ -120,15 +127,23 @@ namespace DhCodetaskExtension.ToolWindows
             });
         }
 
-        // ── Search result buttons ─────────────────────────────────────────
+        // ── Search result handlers ────────────────────────────────────────
+
+        private void SearchResult_Click(object sender,
+            System.Windows.Input.MouseButtonEventArgs e)
+        {
+            AppLogger.Instance.TryCatch("SearchResult_Click", () =>
+            {
+                var result = (sender as FrameworkElement)?.DataContext as RipgrepSearchResult;
+                if (result != null) OpenFileImpl(result.FilePath);
+            });
+        }
 
         private void BtnOpenSearchResult_Click(object sender, RoutedEventArgs e)
         {
             AppLogger.Instance.TryCatch("BtnOpenSearchResult_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var result = fe.Tag as RipgrepSearchResult;
+                var result = (sender as FrameworkElement)?.Tag as RipgrepSearchResult;
                 if (result != null) OpenFileImpl(result.FilePath);
             });
         }
@@ -137,9 +152,7 @@ namespace DhCodetaskExtension.ToolWindows
         {
             AppLogger.Instance.TryCatch("BtnCopySearchPath_Click", () =>
             {
-                var fe = sender as FrameworkElement;
-                if (fe == null) return;
-                var result = fe.Tag as RipgrepSearchResult;
+                var result = (sender as FrameworkElement)?.Tag as RipgrepSearchResult;
                 if (result != null)
                     CopyToClipboardImpl(string.Format("{0}:{1}", result.FilePath, result.LineNumber));
             });
@@ -170,7 +183,11 @@ namespace DhCodetaskExtension.ToolWindows
         private static void CopyToClipboardImpl(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
-            try { System.Windows.Clipboard.SetText(text); AppLogger.Instance.Info("[ProjectHelper] 📋 Copied: " + text); }
+            try
+            {
+                System.Windows.Clipboard.SetText(text);
+                AppLogger.Instance.Info("[ProjectHelper] 📋 Copied: " + text);
+            }
             catch (Exception ex) { AppLogger.Instance.Error("CopyToClipboardImpl", ex); }
         }
 

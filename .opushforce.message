@@ -1,2 +1,2 @@
-v3.5: Project Helper — ripgrep content search + parallel scan optimization + cache age display
-Bổ sung: docs\tasks\task-2026-03-22-03.md
+v3.6: Fix duplicate TaskPauseReasons; fix ripgrep Win32Exception via cmd.exe fallback; filter button (no auto-search); Content Search as top-level tab in Project Helper
+Bổ sung: docs\tasks\task-2026-03-22-04.md

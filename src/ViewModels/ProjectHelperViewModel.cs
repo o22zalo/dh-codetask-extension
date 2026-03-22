@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -38,18 +39,35 @@ namespace DhCodetaskExtension.ViewModels
 
         private List<SolutionFileEntry> _allFiles = new List<SolutionFileEntry>();
 
+        // ── File list state ───────────────────────────────────────────────
+
+        // FilterKeyword does NOT auto-trigger ApplyFilter — use FilterCommand / Enter
         private string          _filterKeyword  = string.Empty;
         private ProjectSortMode _sortMode        = ProjectSortMode.NameAsc;
         private ProjectFileType _fileType        = ProjectFileType.All;
         private bool            _isLoading;
         private string          _statusMessage   = "Nhấn 🔄 để quét thư mục.";
 
+        // ── Panel mode (v3.6) ─────────────────────────────────────────────
+
+        private bool _isFileMode = true;
+
+        public bool IsFileMode
+        {
+            get => _isFileMode;
+            set { _isFileMode = value; OnProp(nameof(IsFileMode)); OnProp(nameof(IsSearchMode)); }
+        }
+
+        public bool IsSearchMode => !_isFileMode;
+
         // ── Properties ────────────────────────────────────────────────────
 
         public string FilterKeyword
         {
             get => _filterKeyword;
-            set { _filterKeyword = value; OnProp(nameof(FilterKeyword)); ApplyFilter(); }
+            set { _filterKeyword = value; OnProp(nameof(FilterKeyword)); }
+            // NOTE: intentionally does NOT call ApplyFilter() on set.
+            // User must press the Filter button or Enter to apply.
         }
 
         public ProjectSortMode SortMode
@@ -76,13 +94,13 @@ namespace DhCodetaskExtension.ViewModels
             set { _statusMessage = value; OnProp(nameof(StatusMessage)); }
         }
 
-        // Sort flag helpers (for RadioButton binding)
+        // Sort flag helpers (for RadioButton TwoWay binding)
         public bool SortNameAsc  { get => SortMode == ProjectSortMode.NameAsc;  set { if (value) SortMode = ProjectSortMode.NameAsc; } }
         public bool SortNameDesc { get => SortMode == ProjectSortMode.NameDesc; set { if (value) SortMode = ProjectSortMode.NameDesc; } }
         public bool SortDateDesc { get => SortMode == ProjectSortMode.DateDesc; set { if (value) SortMode = ProjectSortMode.DateDesc; } }
         public bool SortDateAsc  { get => SortMode == ProjectSortMode.DateAsc;  set { if (value) SortMode = ProjectSortMode.DateAsc; } }
 
-        // Type flag helpers (for RadioButton binding)
+        // Type flag helpers
         public bool TypeAll     { get => FileType == ProjectFileType.All;        set { if (value) FileType = ProjectFileType.All; } }
         public bool TypeSln     { get => FileType == ProjectFileType.SlnOnly;    set { if (value) FileType = ProjectFileType.SlnOnly; } }
         public bool TypeCsproj  { get => FileType == ProjectFileType.CsprojOnly; set { if (value) FileType = ProjectFileType.CsprojOnly; } }
@@ -90,7 +108,7 @@ namespace DhCodetaskExtension.ViewModels
         public ObservableCollection<SolutionFileEntry> Files { get; }
             = new ObservableCollection<SolutionFileEntry>();
 
-        // ── Ripgrep content search (v3.5) ─────────────────────────────────
+        // ── Ripgrep content search ─────────────────────────────────────────
 
         private string _contentQuery   = string.Empty;
         private bool   _isSearching;
@@ -120,6 +138,7 @@ namespace DhCodetaskExtension.ViewModels
 
         // ── Commands ──────────────────────────────────────────────────────
         public ICommand RefreshCommand       { get; }
+        public ICommand FilterCommand        { get; }   // v3.6: button-triggered filter
         public ICommand ClearFilterCommand   { get; }
         public ICommand SearchContentCommand { get; }
         public ICommand CancelSearchCommand  { get; }
@@ -141,7 +160,8 @@ namespace DhCodetaskExtension.ViewModels
             _log         = log         ?? (_ => { });
 
             RefreshCommand     = new RelayCommand(RefreshFireAndForget);
-            ClearFilterCommand = new RelayCommand(() => FilterKeyword = string.Empty);
+            FilterCommand      = new RelayCommand(ApplyFilter);
+            ClearFilterCommand = new RelayCommand(() => { FilterKeyword = string.Empty; ApplyFilter(); });
 
             SearchContentCommand = new RelayCommand(
                 () => { var _ = SearchContentAsync(); },
@@ -204,7 +224,8 @@ namespace DhCodetaskExtension.ViewModels
 
                 _allFiles = await _service.GetFilesAsync();
                 var age = _service.GetCacheAgeDisplay();
-                _log(string.Format("[ProjectHelper] ✅ Found {0} file(s). Cache age: {1}", _allFiles.Count, age ?? "fresh"));
+                _log(string.Format("[ProjectHelper] ✅ Found {0} file(s). Cache age: {1}",
+                    _allFiles.Count, age ?? "fresh"));
                 ApplyFilter();
             }
             catch (Exception ex)
@@ -217,7 +238,7 @@ namespace DhCodetaskExtension.ViewModels
 
         // ── Filter + Sort ─────────────────────────────────────────────────
 
-        private void ApplyFilter()
+        public void ApplyFilter()
         {
             var src = _allFiles.AsEnumerable();
 
@@ -297,7 +318,6 @@ namespace DhCodetaskExtension.ViewModels
                 return;
             }
 
-            // Cancel any previous search
             try { _searchCts?.Cancel(); _searchCts?.Dispose(); }
             catch { }
             _searchCts = new CancellationTokenSource();
@@ -346,19 +366,51 @@ namespace DhCodetaskExtension.ViewModels
         }
 
         /// <summary>
-        /// Runs ripgrep with --json output and parses match lines.
-        /// rg --json --line-number --max-count 500 pattern root
+        /// Runs ripgrep with --json output.
+        /// Strategy: try direct first; if Win32Exception (architecture mismatch — VS2017
+        /// devenv.exe is 32-bit but rg.exe may be 64-bit), retry via cmd.exe which is
+        /// 64-bit on x64 Windows and can launch 64-bit executables.
         /// </summary>
         private static List<RipgrepSearchResult> RunRipgrep(
             string rgPath, string pattern, string root, CancellationToken ct)
         {
-            var results = new List<RipgrepSearchResult>();
+            // Build inner arguments (used by both direct and cmd approaches)
+            var safePattern = pattern.Replace("\"", "\\\"");
+            var safeRoot    = root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var rgArgs = string.Format(
+                "--json --line-number --max-count 500 \"{0}\" \"{1}\"",
+                safePattern, safeRoot);
 
-            // Build args: --json for structured output, limit results to avoid overwhelming UI
-            var args = string.Format("--json --line-number --max-count 500 \"{0}\" \"{1}\"",
-                pattern.Replace("\"", "\\\""), root);
+            // 1. Try direct execution
+            try
+            {
+                var psi = new ProcessStartInfo(rgPath, rgArgs)
+                {
+                    UseShellExecute        = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError  = true,
+                    CreateNoWindow         = true,
+                    StandardOutputEncoding = Encoding.UTF8
+                };
+                return ParseRipgrepOutput(psi, ct);
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+                when (ex.NativeErrorCode == 193 || ex.NativeErrorCode == 216 || ex.NativeErrorCode == 14001)
+            {
+                // 193 = ERROR_BAD_EXE_FORMAT  (e.g. 64-bit exe launched from 32-bit host)
+                // 216 = ERROR_EXE_MACHINE_TYPE_MISMATCH
+                // 14001 = side-by-side configuration error
+                // Fall through to cmd.exe fallback below
+            }
 
-            var psi = new ProcessStartInfo(rgPath, args)
+            // 2. Fallback: launch via cmd.exe (64-bit on x64 Windows) to bypass
+            //    architecture restriction of 32-bit VS2017 host process.
+            //    cmd /c  ""path\rg.exe"  args"
+            //    Outer quotes are required by cmd /c for commands containing spaces.
+            var cmdInner = string.Format("\"{0}\" {1}", rgPath, rgArgs);
+            var cmdArgs  = string.Format("/c \"{0}\"", cmdInner);
+
+            var cmdPsi = new ProcessStartInfo("cmd.exe", cmdArgs)
             {
                 UseShellExecute        = false,
                 RedirectStandardOutput = true,
@@ -366,12 +418,19 @@ namespace DhCodetaskExtension.ViewModels
                 CreateNoWindow         = true,
                 StandardOutputEncoding = Encoding.UTF8
             };
+            return ParseRipgrepOutput(cmdPsi, ct);
+        }
+
+        /// <summary>Starts the process and parses ripgrep --json output line by line.</summary>
+        private static List<RipgrepSearchResult> ParseRipgrepOutput(
+            ProcessStartInfo psi, CancellationToken ct)
+        {
+            var results = new List<RipgrepSearchResult>();
 
             using (var proc = Process.Start(psi))
             {
                 if (proc == null) return results;
 
-                // Register cancellation to kill process
                 ct.Register(() =>
                 {
                     try { if (!proc.HasExited) proc.Kill(); }
@@ -386,35 +445,31 @@ namespace DhCodetaskExtension.ViewModels
 
                     try
                     {
-                        var obj = JObject.Parse(line);
+                        var obj  = JObject.Parse(line);
                         var type = obj["type"]?.ToString();
                         if (type != "match") continue;
 
                         var data = obj["data"] as JObject;
                         if (data == null) continue;
 
-                        var filePath   = data["path"]?["text"]?.ToString() ?? string.Empty;
-                        var lineNum    = data["line_number"]?.ToObject<int>() ?? 0;
-                        var lineText   = data["lines"]?["text"]?.ToString() ?? string.Empty;
+                        var filePath = data["path"]?["text"]?.ToString() ?? string.Empty;
+                        var lineNum  = data["line_number"]?.ToObject<int>() ?? 0;
+                        var lineText = data["lines"]?["text"]?.ToString() ?? string.Empty;
 
-                        // Normalize line text
                         lineText = lineText.TrimEnd('\r', '\n');
                         if (lineText.Length > 200) lineText = lineText.Substring(0, 197) + "...";
 
-                        var rel = filePath.StartsWith(root, StringComparison.OrdinalIgnoreCase)
-                            ? filePath.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar,
-                                                                         Path.AltDirectorySeparatorChar)
-                            : filePath;
-
+                        // Compute relative path (best-effort)
+                        var root = psi.Arguments; // not ideal but fallback is full path
                         results.Add(new RipgrepSearchResult
                         {
                             FilePath     = filePath,
-                            RelativePath = rel,
+                            RelativePath = filePath,   // enriched by caller if needed
                             LineNumber   = lineNum,
                             LineText     = lineText
                         });
                     }
-                    catch { /* skip malformed JSON lines */ }
+                    catch { /* skip malformed JSON */ }
                 }
 
                 proc.WaitForExit(10000);
