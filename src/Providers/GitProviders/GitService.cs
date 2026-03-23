@@ -4,19 +4,21 @@ using System.IO;
 using System.Threading.Tasks;
 using DhCodetaskExtension.Core.Interfaces;
 using DhCodetaskExtension.Core.Models;
+using DhCodetaskExtension.Core.Services;
 
 namespace DhCodetaskExtension.Providers.GitProviders
 {
-    // ── Private result type thay cho ValueTuple (không dùng được ở .NET 4.6) ──
     internal sealed class GitRunResult
     {
         public int ExitCode { get; set; }
         public string Output { get; set; }
         public string Error { get; set; }
+        public bool TimedOut { get; set; }
     }
 
     public sealed class GitService : IGitService
     {
+        private const int GitTimeoutMs = 30000;
         private readonly Func<AppSettings> _settingsProvider;
 
         public GitService(Func<AppSettings> settingsProvider)
@@ -30,9 +32,15 @@ namespace DhCodetaskExtension.Providers.GitProviders
             try
             {
                 var r = RunGit(".", "--version");
-                return r.ExitCode == 0;
+                if (r.TimedOut)
+                    AppLogger.Instance.Warn("[Git] git --version timed out while checking availability.");
+                return r.ExitCode == 0 && !r.TimedOut;
             }
-            catch { return false; }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Warn("[Git] IsAvailable failed: " + ex.Message);
+                return false;
+            }
         }
 
         public string FindRepoRoot(string startPath)
@@ -51,7 +59,12 @@ namespace DhCodetaskExtension.Providers.GitProviders
         {
             if (string.IsNullOrEmpty(repoRoot)) return "unknown";
             var r = await Task.Run(() => RunGit(repoRoot, "rev-parse --abbrev-ref HEAD"));
-            return r.ExitCode == 0 ? r.Output.Trim() : "unknown";
+            if (r.TimedOut)
+            {
+                AppLogger.Instance.Warn("[Git] GetCurrentBranch timed out.");
+                return "unknown";
+            }
+            return r.ExitCode == 0 ? (r.Output ?? string.Empty).Trim() : "unknown";
         }
 
         public async Task<GitResult> PushAndCompleteAsync(string repoRoot, string commitMessage, bool autoPush)
@@ -61,44 +74,47 @@ namespace DhCodetaskExtension.Providers.GitProviders
 
             try
             {
+                AppLogger.Instance.Info(string.Format("[Git] Starting PushAndComplete. Repo={0}, AutoPush={1}", repoRoot, autoPush));
                 var settings = _settingsProvider();
 
                 if (!string.IsNullOrEmpty(settings.GitUserName))
-                    await Task.Run(() => RunGit(repoRoot,
-                        string.Format("config user.name \"{0}\"", settings.GitUserName)));
+                    await RunGitAndLogAsync(repoRoot,
+                        string.Format("config user.name \"{0}\"", settings.GitUserName),
+                        "git config user.name");
                 if (!string.IsNullOrEmpty(settings.GitUserEmail))
-                    await Task.Run(() => RunGit(repoRoot,
-                        string.Format("config user.email \"{0}\"", settings.GitUserEmail)));
+                    await RunGitAndLogAsync(repoRoot,
+                        string.Format("config user.email \"{0}\"", settings.GitUserEmail),
+                        "git config user.email");
 
-                // git add -A
-                var addResult = await Task.Run(() => RunGit(repoRoot, "add -A"));
+                var addResult = await RunGitAndLogAsync(repoRoot, "add -A", "git add -A");
                 if (addResult.ExitCode != 0)
-                    return new GitResult { Error = "git add failed: " + addResult.Error };
+                    return new GitResult { Error = "git add failed: " + BuildError(addResult) };
 
-                // git commit
-                var safeMsg = commitMessage.Replace("\"", "'");
-                var commitResult = await Task.Run(() =>
-                    RunGit(repoRoot, string.Format("commit -m \"{0}\"", safeMsg)));
+                var safeMsg = (commitMessage ?? string.Empty).Replace("\"", "'").Trim();
+                if (string.IsNullOrEmpty(safeMsg)) safeMsg = "Update task progress";
+
+                var commitResult = await RunGitAndLogAsync(repoRoot,
+                    string.Format("commit -m \"{0}\"", safeMsg),
+                    "git commit");
                 if (commitResult.ExitCode != 0)
-                    return new GitResult { Error = "git commit failed: " + commitResult.Error };
+                    return new GitResult { Error = "git commit failed: " + BuildError(commitResult) };
 
-                // git push (optional)
                 if (autoPush)
                 {
-                    var pushResult = await Task.Run(() => RunGit(repoRoot, "push"));
+                    var pushResult = await RunGitAndLogAsync(repoRoot, "push", "git push");
                     if (pushResult.ExitCode != 0)
                         return new GitResult
                         {
-                            Error = "git push failed: " + pushResult.Error,
+                            Error = "git push failed: " + BuildError(pushResult),
                             Output = commitResult.Output
                         };
                 }
 
-                // get commit hash
-                var hashResult = await Task.Run(() => RunGit(repoRoot, "rev-parse HEAD"));
-                var hash = hashResult.ExitCode == 0 ? hashResult.Output.Trim() : string.Empty;
+                var hashResult = await RunGitAndLogAsync(repoRoot, "rev-parse HEAD", "git rev-parse HEAD");
+                var hash = hashResult.ExitCode == 0 ? (hashResult.Output ?? string.Empty).Trim() : string.Empty;
                 if (hash.Length > 7) hash = hash.Substring(0, 7);
 
+                AppLogger.Instance.Info("[Git] PushAndComplete completed successfully. Commit=" + hash);
                 return new GitResult
                 {
                     Success = true,
@@ -108,11 +124,23 @@ namespace DhCodetaskExtension.Providers.GitProviders
             }
             catch (Exception ex)
             {
+                AppLogger.Instance.Error("GitService.PushAndCompleteAsync", ex);
                 return new GitResult { Error = ex.Message };
             }
         }
 
-        // ── Private helper — returns plain class, NO ValueTuple ──────────────
+        private static async Task<GitRunResult> RunGitAndLogAsync(string workDir, string args, string operation)
+        {
+            var result = await Task.Run(() => RunGit(workDir, args));
+            if (result.TimedOut)
+                AppLogger.Instance.Warn(string.Format("[Git] {0} timed out after {1}ms.", operation, GitTimeoutMs));
+            else if (result.ExitCode == 0)
+                AppLogger.Instance.Info(string.Format("[Git] {0} succeeded. {1}", operation, BuildSummary(result.Output)));
+            else
+                AppLogger.Instance.Warn(string.Format("[Git] {0} failed (exit {1}). {2}", operation, result.ExitCode, BuildSummary(result.Error)));
+            return result;
+        }
+
         private static GitRunResult RunGit(string workDir, string args)
         {
             var psi = new ProcessStartInfo("git", args)
@@ -124,18 +152,51 @@ namespace DhCodetaskExtension.Providers.GitProviders
                 CreateNoWindow = true
             };
 
-            using (var p = Process.Start(psi))
+            using (var p = new Process { StartInfo = psi })
             {
-                var output = p.StandardOutput.ReadToEnd();
-                var error = p.StandardError.ReadToEnd();
-                p.WaitForExit(30000);
+                p.Start();
+
+                var outputTask = p.StandardOutput.ReadToEndAsync();
+                var errorTask = p.StandardError.ReadToEndAsync();
+
+                if (!p.WaitForExit(GitTimeoutMs))
+                {
+                    try { p.Kill(); }
+                    catch { }
+
+                    Task.WaitAll(new Task[] { outputTask, errorTask }, 1000);
+                    return new GitRunResult
+                    {
+                        ExitCode = -1,
+                        Output = outputTask.IsCompleted ? outputTask.Result : string.Empty,
+                        Error = errorTask.IsCompleted ? errorTask.Result : string.Empty,
+                        TimedOut = true
+                    };
+                }
+
+                Task.WaitAll(outputTask, errorTask);
                 return new GitRunResult
                 {
                     ExitCode = p.ExitCode,
-                    Output = output,
-                    Error = error
+                    Output = outputTask.Result,
+                    Error = errorTask.Result,
+                    TimedOut = false
                 };
             }
+        }
+
+        private static string BuildError(GitRunResult result)
+        {
+            if (result == null) return "Unknown git error.";
+            if (result.TimedOut) return string.Format("timed out after {0}ms.", GitTimeoutMs);
+            return string.IsNullOrWhiteSpace(result.Error) ? "Unknown git error." : result.Error.Trim();
+        }
+
+        private static string BuildSummary(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return "No output.";
+            var normalized = text.Replace("\r\n", " ").Replace('\n', ' ').Trim();
+            return normalized.Length <= 160 ? normalized : normalized.Substring(0, 160) + "...";
         }
     }
 }

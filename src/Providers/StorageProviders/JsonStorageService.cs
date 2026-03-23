@@ -29,45 +29,73 @@ namespace DhCodetaskExtension.Providers.StorageProviders
 
         private void EnsureRoot()
         {
-            if (!Directory.Exists(Root)) Directory.CreateDirectory(Root);
+            if (!Directory.Exists(Root))
+            {
+                Directory.CreateDirectory(Root);
+                AppLogger.Instance.Info("[Storage] Created root directory: " + Root);
+            }
         }
 
         public async Task<AppSettings> LoadSettingsAsync()
         {
-            if (_cachedSettings != null) return _cachedSettings;
+            if (_cachedSettings != null)
+            {
+                AppLogger.Instance.Info("[Storage] Returning cached settings.");
+                return _cachedSettings;
+            }
+
             EnsureRoot();
             if (!File.Exists(SettingsPath))
             {
+                AppLogger.Instance.Warn("[Storage] settings.json not found. Creating default settings.");
                 _cachedSettings = new AppSettings();
                 await SaveSettingsAsync(_cachedSettings);
                 return _cachedSettings;
             }
+
             try
             {
                 var json = await Task.Run(() => File.ReadAllText(SettingsPath, Encoding.UTF8));
                 _cachedSettings = JsonConvert.DeserializeObject<AppSettings>(json) ?? new AppSettings();
+                AppLogger.Instance.Info("[Storage] Loaded settings from: " + SettingsPath);
             }
-            catch { _cachedSettings = new AppSettings(); }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Error("JsonStorageService.LoadSettingsAsync", ex);
+                _cachedSettings = new AppSettings();
+            }
             return _cachedSettings;
         }
 
         public async Task SaveSettingsAsync(AppSettings settings)
         {
-            _cachedSettings = settings;
+            _cachedSettings = settings ?? new AppSettings();
             EnsureRoot();
-            var json = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(_cachedSettings, Formatting.Indented);
             await AtomicFile.WriteAllTextAsync(SettingsPath, json);
+            AppLogger.Instance.Info("[Storage] Saved settings to: " + SettingsPath);
         }
 
         public async Task<WorkLog> LoadCurrentTaskAsync()
         {
-            if (!File.Exists(CurrentTaskPath)) return null;
+            if (!File.Exists(CurrentTaskPath))
+            {
+                AppLogger.Instance.Info("[Storage] No current task snapshot found.");
+                return null;
+            }
+
             try
             {
                 var json = await Task.Run(() => File.ReadAllText(CurrentTaskPath, Encoding.UTF8));
-                return JsonConvert.DeserializeObject<WorkLog>(json);
+                var workLog = JsonConvert.DeserializeObject<WorkLog>(json);
+                AppLogger.Instance.Info("[Storage] Loaded current task snapshot: " + CurrentTaskPath);
+                return workLog;
             }
-            catch { return null; }
+            catch (Exception ex)
+            {
+                AppLogger.Instance.Error("JsonStorageService.LoadCurrentTaskAsync", ex);
+                return null;
+            }
         }
 
         public async Task SaveCurrentTaskAsync(WorkLog log)
@@ -75,6 +103,7 @@ namespace DhCodetaskExtension.Providers.StorageProviders
             EnsureRoot();
             var json = JsonConvert.SerializeObject(log, Formatting.Indented);
             await AtomicFile.WriteAllTextAsync(CurrentTaskPath, json);
+            AppLogger.Instance.Info("[Storage] Saved current task snapshot: " + CurrentTaskPath);
         }
 
         public Task ClearCurrentTaskAsync()
@@ -83,11 +112,23 @@ namespace DhCodetaskExtension.Providers.StorageProviders
             {
                 try
                 {
-                    if (File.Exists(CurrentTaskPath)) File.Delete(CurrentTaskPath);
+                    if (File.Exists(CurrentTaskPath))
+                    {
+                        File.Delete(CurrentTaskPath);
+                        AppLogger.Instance.Info("[Storage] Deleted current task snapshot: " + CurrentTaskPath);
+                    }
+
                     var bak = CurrentTaskPath + ".bak";
-                    if (File.Exists(bak)) File.Delete(bak);
+                    if (File.Exists(bak))
+                    {
+                        File.Delete(bak);
+                        AppLogger.Instance.Info("[Storage] Deleted current task backup: " + bak);
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    AppLogger.Instance.Error("JsonStorageService.ClearCurrentTaskAsync", ex);
+                }
             });
         }
 
@@ -97,7 +138,11 @@ namespace DhCodetaskExtension.Providers.StorageProviders
             var year    = report.CompletedAt.Year.ToString("D4");
             var month   = report.CompletedAt.Month.ToString("D2");
             var dir     = Path.Combine(histDir, year, month);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+                AppLogger.Instance.Info("[Storage] Created history directory: " + dir);
+            }
 
             string slug     = Slugify(report.TaskTitle);
             string stamp    = report.CompletedAt.ToString("yyyyMMdd_HHmmss");
@@ -108,24 +153,17 @@ namespace DhCodetaskExtension.Providers.StorageProviders
 
             report.SetFilePaths(jsonPath, mdPath);
 
-            // ── Compute checksum using canonical JObject round-trip ───────
-            // 1. Serialize report (Checksum is null at this point)
             var tempJson = JsonConvert.SerializeObject(report, Formatting.Indented);
-            // 2. Parse to JObject, remove "Checksum" key to get canonical form
-            //    (same approach used in HistoryQueryService.VerifyReportChecksum)
             var jobjTemp = JObject.Parse(tempJson);
             jobjTemp.Remove("Checksum");
             var canonicalJson = jobjTemp.ToString(Formatting.Indented);
-            // 3. Compute SHA-256 of canonical form
             var checksum = ChecksumHelper.Compute(canonicalJson);
             report.SetChecksum(checksum);
-            // 4. Final serialization WITH checksum
             var finalJson = JsonConvert.SerializeObject(report, Formatting.Indented);
 
             await AtomicFile.WriteAllTextAsync(jsonPath, finalJson);
+            AppLogger.Instance.Info("[Storage] Archived report JSON: " + jsonPath);
         }
-
-        // ── Static helper ─────────────────────────────────────────────────
 
         private static string Slugify(string s)
         {
