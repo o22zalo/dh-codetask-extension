@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  VSIX Atom Feed Template
+  ========================
+  File này là TEMPLATE — GitHub Actions tự sinh docs/vsixfeed.xml từ đây.
+  KHÔNG sửa docs/vsixfeed.xml trực tiếp — sửa file này nếu cần thay cấu trúc.
+
+  Placeholders được release.js thay thế:
+    {{VERSION}}       — version mới (vd: 3.9.1)
+    {{DOWNLOAD_URL}}  — URL tải .vsix từ GitHub Release
+    {{REPO_URL}}      — URL repo gốc
+    {{UPDATED}}       — ISO timestamp lúc generate
+
+  Cách kích hoạt:
+    1. Thay YOUR_GITHUB_USERNAME bên dưới bằng username thật (1 lần duy nhất)
+    2. Bật GitHub Pages: Settings > Pages > Source = main / docs
+    3. Từ đó mỗi git tag v* sẽ tự cập nhật feed
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="text">DH Codetask Extension Updates</title>
+  <id>{{REPO_URL}}</id>
+  <updated>{{UPDATED}}</updated>
+  <link rel="self" href="https://YOUR_GITHUB_USERNAME.github.io/dh-codetask-extension/vsixfeed.xml" />
+
+  <entry>
+    <id>DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789</id>
+    <title type="text">DH Codetask Extension v{{VERSION}}</title>
+    <summary type="text">DevTask Tracker — Track tasks, time, and TODOs inside Visual Studio 2017.</summary>
+    <published>{{UPDATED}}</published>
+    <updated>{{UPDATED}}</updated>
+    <author><name>DH</name></author>
+    <content type="application/octet-stream" src="{{DOWNLOAD_URL}}" />
+    <Vsix xmlns="http://schemas.microsoft.com/developer/vsx-syndication-schema/2010"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.microsoft.com/developer/vsx-syndication-schema/2010 http://schemas.microsoft.com/developer/vsx-syndication-schema/2010/VsixFeedSchema.xsd">
+      <Id>DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789</Id>
+      <Version>{{VERSION}}</Version>
+      <References />
+    </Vsix>
+  </entry>
+</feed>

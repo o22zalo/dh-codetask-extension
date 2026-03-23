@@ -1,3 +1,30 @@
+## 2026-03-23 - v3.9: Cập nhật tự động qua VSIX Gallery + GitHub Actions
+
+**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-23-01.md` — dùng cơ chế `GalleryUrl` tích hợp sẵn của VS2017 (đúng chuẩn VSIX), không tự viết HTTP client.
+
+### Thay đổi
+
+**`src/source.extension.vsixmanifest`:**
+- Thêm `<GalleryUrl>` trỏ về GitHub Pages feed
+- VS đọc feed qua `Tools > Extensions and Updates > Updates`
+
+**`docs/vsixfeed.xml`** — generated file, do CI cập nhật tự động
+
+**`docs/vsixfeed.template.xml`** — template gốc với `{{PLACEHOLDER}}`, chỉ sửa file này khi cần thay cấu trúc feed
+
+**`.github/workflows/release.yml`** — YAML gọn, chỉ gọi node script:
+- Trigger: push tag `v*.*.*` hoặc `workflow_dispatch`
+- Patch version → Build VSIX → Prepare assets → Update feed → Create Release → Commit feed
+
+**`.github/workflows/release.js`** — toàn bộ logic xử lý:
+- `patch-version`: sửa `AssemblyInfo.cs` + `vsixmanifest`
+- `prepare-assets`: rename .vsix, tạo `release_notes.md` từ CHANGELOG.md
+- `update-feed`: đọc template, replace `{{VERSION}}` / `{{DOWNLOAD_URL}}` / `{{REPO_URL}}` / `{{UPDATED}}`, ghi ra `vsixfeed.xml`
+
+**Version bump:** 3.8 → 3.9
+
+---
+
 ## 2026-03-22 - v3.7: Fix ripgrep logging; fix Checksum canonical form; fix History refresh; fix TODO button states; fix TodoTemplate UX
 
 **Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-04.md`
@@ -30,13 +57,12 @@ Fix: `ArchiveReportAsync` dùng cùng JObject round-trip:
 ```
 Serialize(report) → JObject.Parse → Remove("Checksum") → ToString() → hash
 ```
-Đảm bảo canonical form giống hệt phía verify.
 
 ### Fix 4 — TODO buttons: CanExecuteChanged
 
 **File:** `src/ViewModels/TodoItemViewModel.cs`
 
-`RaiseStateChanged()` nay gọi thêm `RaiseCanExecuteChanged()` cho Start/Pause/Stop/Complete commands. WPF re-evaluate CanExecute ngay khi state đổi → buttons disable/enable đúng.
+`RaiseStateChanged()` nay gọi thêm `RaiseCanExecuteChanged()` cho Start/Pause/Stop/Complete commands.
 
 ### Fix 5 — TodoTemplate: set text + enable Add button
 
@@ -57,27 +83,15 @@ Serialize(report) → JObject.Parse → Remove("Checksum") → ToString() → ha
 
 ## 2026-03-22 - Solution File Browser: quét .sln và .csproj trong DirectoryRootDhHosCodePath với cache TTL
 
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — thêm panel danh sách file .sln/.csproj để mở nhanh, sắp xếp a-z, lọc theo tên, với cơ chế cache tái sử dụng.
-
 ## 2026-03-22 - Report Checksum: SHA-256 để phát hiện can thiệp từ bên ngoài
-
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — đảm bảo toàn vẹn dữ liệu report JSON.
 
 ## 2026-03-22 - URL Duplicate Check: kiểm tra lịch sử trước khi fetch Gitea
 
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — tránh fetch lại task đã có trong lịch sử.
-
 ## 2026-03-22 - Redesign Task Timer: chỉ Bắt đầu và Tạm ngưng với lý do
-
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — giao diện đơn giản hơn, khi Tạm ngưng ghi nhận lý do.
 
 ## 2026-03-22 - Redesign TODO: Bắt đầu / Tạm ngưng / Kết thúc
 
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — task con cần rõ ràng hơn, đặc biệt nút Kết thúc.
-
 ## 2026-03-22 - TODO Templates: chọn nhanh task con từ cấu hình
-
-**Nguyên nhân:** Yêu cầu từ `docs/tasks/task-2026-03-22-00.md` — danh sách TODO mẫu để thêm nhanh.
 
 **Version bump:** 3.2 → 3.3
 

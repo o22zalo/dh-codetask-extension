@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="3.0" Language="en-US" Publisher="DH" />
+        <Identity Id="DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789" Version="3.9" Language="en-US" Publisher="DH" />
         <DisplayName>DH Codetask Extension</DisplayName>
-        <Description xml:space="preserve">DevTask Tracker v3.0 — Track tasks, time, and TODOs inside Visual Studio 2017 with Gitea integration, completion reports, and history browser.</Description>
-        <MoreInfo>https://github.com/your-repo/dh-codetask-extension</MoreInfo>
+        <Description xml:space="preserve">DevTask Tracker v3.9 — Track tasks, time, and TODOs inside Visual Studio 2017 with Gitea integration, completion reports, and history browser.</Description>
+        <MoreInfo>https://github.com/YOUR_GITHUB_USERNAME/dh-codetask-extension</MoreInfo>
         <License>Resources\LICENSE</License>
         <Icon>Resources\Icon128x128.png</Icon>
         <PreviewImage>Resources\Icon128x128.png</PreviewImage>
         <Tags>vsix, extension, dh-codetask, vs2017, gitea, task-tracker, time-tracking</Tags>
+        <!--
+            VSIX Gallery Feed — VS2017 đọc URL này qua Tools > Extensions and Updates > Updates.
+            Thay YOUR_GITHUB_USERNAME bằng GitHub username thật (1 lần duy nhất).
+            Feed được cập nhật tự động bởi GitHub Actions sau mỗi git tag v*.
+        -->
+        <GalleryUrl>https://YOUR_GITHUB_USERNAME.github.io/dh-codetask-extension/vsixfeed.xml</GalleryUrl>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0.27413, 16.0)" />

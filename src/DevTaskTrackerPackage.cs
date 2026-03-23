@@ -26,7 +26,7 @@ namespace DhCodetaskExtension
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration(
         "DH Codetask Extension",
-        "DevTask Tracker — Gitea, Time Tracking, TODO, Reports.", "3.7")]
+        "DevTask Tracker — Gitea, Time Tracking, TODO, Reports.", "3.9")]
     [ProvideToolWindow(typeof(TrackerToolWindow),
         Style = VsDockStyle.Tabbed, DockedWidth = 360,
         Window = "DocumentWell", Orientation = ToolWindowOrientation.Left)]
@@ -74,7 +74,10 @@ namespace DhCodetaskExtension
             Settings  = await _storage.LoadSettingsAsync();
 
             AppLogger.Instance.Init(OutputWindow);
-            AppLogger.Instance.Info("DevTaskTracker v3.7 initializing...");
+            // v3.9: log feed URL so user can verify configuration
+            AppLogger.Instance.Info("DevTaskTracker v3.9 initializing...");
+            AppLogger.Instance.Info("[Update] VS tự quản lý cập nhật extension qua GalleryUrl trong vsixmanifest.");
+            AppLogger.Instance.Info("[Update] Kiểm tra bản mới: Tools > Extensions and Updates > Updates");
 
             // 3. Core services
             _eventBus    = new EventBus();
@@ -120,8 +123,6 @@ namespace DhCodetaskExtension
             };
 
             // 9. HistoryViewModel
-            // v3.7: Pass _historyRepo.InvalidateCache so the Refresh button forces
-            // re-reading from disk rather than returning the stale in-memory cache.
             _historyVm = new HistoryViewModel(
                 _historyRepo,
                 msg => { try { ThreadHelper.ThrowIfNotOnUIThread(); OutputWindow.Log(msg); } catch { } },
@@ -184,7 +185,7 @@ namespace DhCodetaskExtension
             }
             catch (Exception ex) { OutputWindow.Log("[Restore] " + ex.Message); }
 
-            OutputWindow.Log("[DevTaskTracker] v3.7 loaded. Settings: " + _storage.GetSettingsFilePath());
+            OutputWindow.Log("[DevTaskTracker] v3.9 loaded. Settings: " + _storage.GetSettingsFilePath());
             StatusBar.SetText("DevTask Tracker ready.");
         }
 

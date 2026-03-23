@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  File này được GitHub Actions tự động cập nhật sau mỗi release.
+  KHÔNG sửa tay — sửa docs/vsixfeed.template.xml nếu muốn thay cấu trúc.
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="text">DH Codetask Extension Updates</title>
+  <id>https://github.com/YOUR_GITHUB_USERNAME/dh-codetask-extension</id>
+  <updated>2026-03-23T00:00:00Z</updated>
+  <entry>
+    <id>DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789</id>
+    <title type="text">DH Codetask Extension v3.9</title>
+    <summary type="text">DevTask Tracker — Track tasks, time, and TODOs inside Visual Studio 2017.</summary>
+    <published>2026-03-23T00:00:00Z</published>
+    <updated>2026-03-23T00:00:00Z</updated>
+    <author><n>DH</n></author>
+    <content type="application/octet-stream"
+             src="https://github.com/YOUR_GITHUB_USERNAME/dh-codetask-extension/releases/download/v3.9/DhCodetaskExtension.3.9.vsix" />
+    <Vsix xmlns="http://schemas.microsoft.com/developer/vsx-syndication-schema/2010"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://schemas.microsoft.com/developer/vsx-syndication-schema/2010 http://schemas.microsoft.com/developer/vsx-syndication-schema/2010/VsixFeedSchema.xsd">
+      <Id>DhCodetaskExtension.D1E2F3A4-B5C6-7890-ABCD-EF0123456789</Id>
+      <Version>3.9</Version>
+      <References />
+    </Vsix>
+  </entry>
+</feed>

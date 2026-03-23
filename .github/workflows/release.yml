@@ -1,0 +1,96 @@
+name: Build and Release VSIX
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 3.9.1)'
+        required: true
+
+jobs:
+  release:
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "push") {
+            $v = "${{ github.ref_name }}".TrimStart('v')
+          } else {
+            $v = "${{ github.event.inputs.version }}"
+          }
+          "VERSION=$v" >> $env:GITHUB_OUTPUT
+          "TAG=v$v"    >> $env:GITHUB_OUTPUT
+
+      - name: Patch version in source files
+        shell: pwsh
+        run: node .github/workflows/release.js patch-version ${{ steps.ver.outputs.VERSION }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x86
+
+      - name: NuGet restore
+        shell: pwsh
+        run: nuget restore src/DhCodetaskExtension.csproj -PackagesDirectory packages
+
+      - name: Build VSIX
+        shell: pwsh
+        run: |
+          msbuild src/DhCodetaskExtension.csproj `
+            /p:Configuration=Release `
+            /p:DeployExtension=false `
+            /m /verbosity:minimal
+
+      - name: Prepare release assets
+        shell: pwsh
+        run: node .github/workflows/release.js prepare-assets ${{ steps.ver.outputs.VERSION }}
+
+      - name: Update VSIX feed
+        shell: pwsh
+        run: node .github/workflows/release.js update-feed ${{ steps.ver.outputs.VERSION }} "${{ github.repository }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name:  ${{ steps.ver.outputs.TAG }}
+          name:      "DH Codetask Extension v${{ steps.ver.outputs.VERSION }}"
+          body_path: release_notes.md
+          files:     "*.vsix"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit updated feed
+        shell: pwsh
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/vsixfeed.xml
+          $diff = git diff --cached --name-only
+          if ($diff) {
+            git commit -m "chore: update vsixfeed.xml to v${{ steps.ver.outputs.VERSION }} [skip ci]"
+            git push origin HEAD:main
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DhCodetaskExtension-${{ steps.ver.outputs.VERSION }}
+          path: "*.vsix"
+          retention-days: 60
