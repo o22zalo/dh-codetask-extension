@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -30,7 +31,10 @@ namespace DhCodetaskExtension.Core.Services
                 _logFilePath = Path.Combine(dir,
                     string.Format("devtask_{0:yyyyMMdd}.log", DateTime.Today));
             }
-            catch { /* non-critical */ }
+            catch
+            {
+                // non-critical
+            }
         }
 
         public static AppLogger Instance
@@ -50,31 +54,31 @@ namespace DhCodetaskExtension.Core.Services
             _outputWindow = outputWindow;
         }
 
-        // ── Public API ────────────────────────────────────────────────────
-
         public void Info(string message)  => Write("INFO ", message);
         public void Warn(string message)  => Write("WARN ", message);
         public void Error(string message) => Write("ERROR", message);
 
         public void Error(string context, Exception ex)
         {
-            if (ex == null) { Error(context); return; }
-            Write("ERROR", string.Format("[{0}] {1}\n  {2}", context, ex.Message,
-                ex.StackTrace?.Replace("\n", "\n  ") ?? string.Empty));
+            if (ex == null)
+            {
+                Error(context);
+                return;
+            }
+
+            Write("ERROR", string.Format("[{0}] {1}{2}  {3}",
+                context,
+                ex.Message,
+                Environment.NewLine,
+                ex.StackTrace?.Replace(Environment.NewLine, Environment.NewLine + "  ") ?? string.Empty));
         }
 
-        /// <summary>
-        /// Wrap an action in try/catch. Log the error and continue — never crash caller.
-        /// </summary>
         public void TryCatch(string context, Action action)
         {
             try { action(); }
             catch (Exception ex) { Error(context, ex); }
         }
 
-        /// <summary>
-        /// Wrap an async operation in try/catch. Returns false if an exception occurred.
-        /// </summary>
         public async System.Threading.Tasks.Task<bool> TryCatchAsync(string context,
             Func<System.Threading.Tasks.Task> action)
         {
@@ -82,50 +86,46 @@ namespace DhCodetaskExtension.Core.Services
             catch (Exception ex) { Error(context, ex); return false; }
         }
 
-        // ── Private ───────────────────────────────────────────────────────
-
         private void Write(string level, string message)
         {
-            var line = string.Format("[{0:HH:mm:ss}] [{1}] {2}",
-                DateTime.Now, level, message);
+            var normalizedMessage = (message ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
+            var line = string.Format("[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [T{2}] {3}",
+                DateTime.Now,
+                level,
+                Thread.CurrentThread.ManagedThreadId,
+                normalizedMessage);
 
-            // Write to file (background, non-blocking)
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                if (string.IsNullOrEmpty(_logFilePath)) return;
-                lock (_fileLock)
-                {
-                    try { File.AppendAllText(_logFilePath, line + "\n", Encoding.UTF8); }
-                    catch { /* never crash */ }
-                }
-            });
+            ThreadPool.QueueUserWorkItem(_ => AppendToFile(line));
 
-            // Write to VS Output Window (must be marshalled via Dispatcher if on BG thread)
-            var ow = _outputWindow;
-            if (ow == null) return;
             try
             {
-                if (System.Windows.Application.Current?.Dispatcher?.CheckAccess() == true)
+                var outputLine = string.Format("[{0}] [T{1}] {2}",
+                    level.Trim(),
+                    Thread.CurrentThread.ManagedThreadId,
+                    normalizedMessage.Replace("\n", Environment.NewLine + "    "));
+                _outputWindow?.LogSafe(outputLine);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("[DhCodetaskExtension][Logger] Output window logging failed: " + ex.Message);
+            }
+        }
+
+        private void AppendToFile(string line)
+        {
+            if (string.IsNullOrEmpty(_logFilePath)) return;
+
+            lock (_fileLock)
+            {
+                try
                 {
-                    Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-                    ow.Log(string.Format("[{0}] {1}", level.Trim(), message));
+                    File.AppendAllText(_logFilePath, line + Environment.NewLine, Encoding.UTF8);
                 }
-                else
+                catch (Exception ex)
                 {
-                    System.Windows.Application.Current?.Dispatcher?.BeginInvoke(
-                        System.Windows.Threading.DispatcherPriority.Background,
-                        new Action(() =>
-                        {
-                            try
-                            {
-                                Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
-                                ow.Log(string.Format("[{0}] {1}", level.Trim(), message));
-                            }
-                            catch { }
-                        }));
+                    Trace.WriteLine("[DhCodetaskExtension][Logger] File logging failed: " + ex.Message);
                 }
             }
-            catch { /* never crash */ }
         }
     }
 }
